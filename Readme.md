@@ -1,252 +1,181 @@
-# 🏗 STARKNET-SCAFFOLD
+# Peer Protocol
 
-🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on Starknet. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts.
+Peer Protocol is a decentralized peer-to-peer lending platform built on Starknet, enabling transparent and efficient borrowing and lending of digital assets.
 
-⚙️ Built using NextJS, Starknet.js, Starknet-React, Starknetkit, Typescript, Scarb, and Starknet-Foundry.
 
-## REQUIREMENTS
+## Overview
 
-Before you begin, you need to install the following tools:
+Peer Protocol facilitates direct lending between users through:
+- Creation and management of loan proposals
+- Customizable interest rates and loan terms
+- Counter-proposal mechanisms
+- Transparent transaction history
+- Real-time market analytics
 
-- [Node (v18 LTS)](https://nodejs.org/en/download/)
-- [Rust](https://www.rust-lang.org/tools/install)
-- [Git](https://git-scm.com/downloads)
+### Key Features
+- **Direct P2P Lending**: Connect borrowers and lenders without intermediaries
+- **Flexible Terms**: Customizable loan amounts, durations, and interest rates
+- **Counter Proposals**: Negotiate terms through counter-proposals
+- **Market Analytics**: Real-time data on lending trends and rates
+- **Wallet Integration**: Seamless connection with Starknet-compatible wallets
+- **Dark/Light Mode**: User-friendly interface with theme options
 
-## QUICK START
+## Getting Started
 
-To get started with Starknet-Scaffold, Clone this repo:
+### Prerequisites
+- Node.js (v18.20.4 or later)
+- npm 
+- Git
+- A Starknet wallet (like Argent X or Braavos)
 
-```
-git clone git@github.com:horuslabsio/Starknet-Scaffold.git
-cd Starknet-Scaffold
-```
+### Installation
 
-Or install using create-starknet-app (recommended).
-
-PS: defaults to debugger mode, if no type is specified.
-
-## FEATURES
-
-### Contract Section
-
-Scripts exists to make your life easier! Here are available scripts and features:
-| Feature | Available |
-| :---: | :---: |
-| Build Contract | ✅ |
-| Format Contract | ✅ |
-| Verify Contract | ✅ |
-| Run custom scripts | ✅ |
-| Generate SRC5 Interface | ✅ |
-| Prepare Account | ✅ |
-| Deploy Account| ✅ |
-| Delete Account | ✅ |
-| Declare Contract | ✅ |
-| Deploy Contract | ✅ |
-| Devnet spin up | ✅ |
-| Burner wallets for debugging | ✅ |
-| Starknet contract Deployer | ✅ |
-| sepETH/sepSTRK faucet | ✅ |
-| Cairo Wikipedia | ✅ |
-
-### Dojo Section
-
-Scripts to make building with Dojo easier! Here are available scripts and features:
-| Feature | Available |
-| :---: | :---: |
-| Initialize Dojo Project | ✅ |
-| Build Dojo Project | ✅ |
-| Deploy Katana | ✅ |
-| Migrate Dojo Project | ✅ |
-
-### UI Section
-
-UI components, to spin up faster UIs. Any missing UI component you'd like to see? please open a PR:)
-| Feature | Available |
-| :---: | :---: |
-| Connect button & Custom Wallet Modal | ✅ |
-| Address bar (Displays StarknetID) | ✅ |
-| Transactions List | ✅ |
-| modal to copy/disconnect/view account | ✅ |
-| Display account balance | ✅ |
-| Switch/display network | ✅ |
-| App Light/Dark mode | ✅ |
-| Burner wallet UI| ✅ |
-
-## USAGE
-
-### Contract Section
-
-The `contract` folder contains all the tools needed to write, build, test and deploy your Starknet smart contracts. It is built with Scarb and Starknet Foundry. Here are common operations you can perform on your contracts:
-
-#### Build contracts
-
-To build your smart contracts, from the base repository run:
-
-```
-npm run build-contracts
+1. Clone the repository
+```bash
+git clone https://github.com/Dprof-in-tech/peer-on-strk.git
+cd peer-on-strk
 ```
 
-#### Format contracts
-
-Scarb comes with an in-built cairo formatter. To utilize it run:
-
-```
-npm run format-contracts
+2. Install dependencies
+```bash
+npm install
 ```
 
-#### Verify contracts
-
-To verify your smart contracts, from the base repository run:
-
-```
-npm run verify-contracts --contract-address=<CONTRACT_ADDRESS> --contract-name=<CONTRACT_NAME> --network=<NETWORK>
-```
-
-#### Test contracts
-
-To run your tests:
+3. Run the development server
+```bash
+npm run dev
 
 ```
-npm run test-contracts
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+### Build for Production
+```bash
+npm run build
 ```
 
-#### Run custom starknet foundry scripts
+## Contributing to Peer Protocol
 
-To run a custom starknet foundry deploy/declare/invoke script:
+We welcome contributions from the community! Here's how you can help make Peer Protocol better.
 
-```
-npm run contract-scripts <SCRIPT_NAME> --url=<RPC_URL>
-```
+### Code of Conduct
 
-#### Generate an SRC-5 interface ID for your contracts
+By participating in this project, you agree to abide by our Code of Conduct (see CODE_OF_CONDUCT.md).
 
-To generate an interface ID, run:
+### How to Contribute
 
-```
-npm run generate-interface <PATH_TO_INTERFACE>
-```
+1. **Fork the Repository**
+   - Click the 'Fork' button on GitHub
+   - Clone your fork locally
+   ```bash
+   git clone https://github.com/your-username/peer-on-strk.git
+   ```
 
-#### Prepare Account for deployment
+2. **Create a Branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   # or
+   git checkout -b fix/your-fix-name
+   ```
 
-To prepare your account for deployment, run:
+3. **Make Your Changes**
+   - Follow the coding style guidelines
+   - Write clear, concise commit messages
+   - Add tests if applicable
+   - Update documentation as needed
 
-```
-npm run prepare-account --url=<RPC_URL> --name=<ACCOUNT_NAME> <PROFILE_NAME>
-```
+4. **Test Your Changes**
+   ```bash
+   npm run test
+   # and
+   npm run lint
+   ```
 
-generates a profile which is added to `scarb.toml` and can be passed to other commands.
+5. **Submit a Pull Request**
+   - Push your changes to your fork
+   - Create a Pull Request from your fork to our main repository
+   - Fill out the PR template with all relevant information
 
-#### Deploy Account
+### Pull Request Guidelines
 
-To deploy an account:
+- **Title**: Clear and descriptive
+- **Description**: Explain your changes and their impact
+- **Issue Reference**: Link any related issues
+- **Screenshots**: Include for UI changes
+- **Tests**: Add/update as needed
 
-```
-npm run deploy-account --profile=<MY_PROFILE> --name=<ACCOUNT_NAME> --feetoken=<FEE_TOKEN> --maxfee=<MAX_FEE>
-```
+### Development Guidelines
 
-where the `profile` is gotten from `snfoundry.toml`, `name` is the prepared account and `maxfee` is the specified max fee.
+#### Code Style
+- Use TypeScript for type safety
+- Follow existing code formatting (Prettier configuration)
+- Use meaningful variable and function names
+- Keep components small and focused
+- Comment complex logic
 
-#### Delete Account
+#### Component Structure
+```typescript
+// Use TypeScript interfaces
+interface ComponentProps {
+  prop1: string;
+  prop2: number;
+}
 
-To delete an account:
-
-```
-npm run delete-account --profile=<MY_PROFILE> --accountfile=<PATH_TO_ACCOUNT_FILE> --name=<ACCOUNT_NAME> --network=<alpha-mainnet | alpha-goerli>
-```
-
-#### Declare Contract
-
-To declare a contract:
-
-```
-npm run declare-contract --profile=<MY_PROFILE> --contract=<CONTRACT_NAME> --feetoken=<FEE_TOKEN>
-```
-
-#### Deploy Contract
-
-To deploy a contract:
-
-```
-npm run deploy-contract --profile=<MY_PROFILE> --feetoken=<FEE_TOKEN> --class=<CONTRACT_CLASSHASH>
-```
-
-#### Run Starknet-Devnet
-
-Ensure to have Docker installed. To run starknet-devnet:
-
-```
-npm run devnet
-```
-
-### Dojo Section
-
-The `dojo-contracts` folder contains all the tools needed to write, build, test and dojo projects. It is built with sozo and katana. Here are common operations you can perform on your dojo contracts.
-
-#### Initialize Dojo Project
-
-To initialize a dojo project, from the base repository:
-
-```
-npm run initialize-dojo --name=<PROJECT_NAME>
+// Functional components with clear typing
+const Component: React.FC<ComponentProps> = ({ prop1, prop2 }) => {
+  // Implementation
+};
 ```
 
-#### Build Dojo Project
+#### State Management
+- Use React hooks appropriately
+- Keep state as local as possible
+- Document complex state interactions
 
-To build your dojo project, from the base repository run:
-
+#### Commit Messages
+Follow conventional commits:
 ```
-npm run build-dojo --name=<PROJECT_NAME>
-```
-
-### Deploy Katana
-
-To build deploy katana, from the base repository run:
-
-```
-npm run deploy-dojo-katana --name=<PROJECT_NAME>
+feat: add new borrower dashboard
+fix: correct interest rate calculation
+docs: update setup instructions
 ```
 
-#### Migrate Dojo Project
+### What We're Looking For
 
-To migrate your dojo project, from the base repository run:
+- Bug fixex
+- Feature implementations
+- Documentation improvements
+- Performance optimizations
+- UI/UX enhancements
+- Test coverage improvements
 
-```
-npm run migrate-dojo --name=<PROJECT_NAME>
-```
+### Getting Help
 
-### UI SECTION
+- Check existing issues and discussions
+- Join our Discord / Telegram community
+- Read the documentation
+- Reach out to maintainers
 
-The `frontend` section contains all UI components. Built using NextJS, Starknet.js, Starknet-React, Starknetkit, and Typescript.
-
-#### Run UI
-
-To run UI, from the base repository:
-
-```
-npm run start
-```
-
-#### Build UI
-
-To build your frontend, from the base repository run:
+## Project Structure
 
 ```
-npm run build-ui
+peer-protocol/app
+├── components/         # Reusable React components
+├── public/            # Static assets
+├── app/              # The main peer protocol app
 ```
 
-## DOCUMENTATION
+## License
 
-Documentations of tools used in this scaffold:
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-1. [Scarb](https://docs.swmansion.com/scarb/docs.html)
-2. [Starknet Foundry](https://foundry-rs.github.io/starknet-foundry/index.html)
-3. [Nextjs](https://nextjs.org/docs)
-4. [Starknetjs](https://www.starknetjs.com/docs/API/)
-5. [Starknet-React](https://starknet-react.com/docs/getting-started)
-6. [Starknetkit](https://www.starknetkit.com/docs/getting-started)
+## Support
 
-## HOW TO CONTRIBUTE TO STARKNET-SCAFFOLD
+If you need help or have questions:
+- Open an issue
+- Join our Discord server / Telegram Channel
+- Email us at peerprotocol.protonmail.com
 
-We welcome contributions to Starknet-Scaffold!
+---
 
-Please see [CONTRIBUTING.MD](https://github.com/argentlabs/Starknet-Scaffold/blob/main/CONTRIBUTING.md) for more information and guidelines for contributing to Starknet-Scaffold.
+Thank you for considering contributing to Peer Protocol! Together we can build a more accessible and efficient lending platform for everyone.
