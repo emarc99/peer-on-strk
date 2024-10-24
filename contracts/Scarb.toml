@@ -1,5 +1,5 @@
 [package]
-name = "contracts"
+name = "peer_protocol"
 version = "0.1.0"
 
 [dependencies]
