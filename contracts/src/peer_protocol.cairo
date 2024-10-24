@@ -24,9 +24,9 @@ mod PeerProtocol {
 
     #[derive(Drop, starknet::Event)]
     pub struct DepositSuccessful {
-        user: ContractAddress,
-        token: ContractAddress,
-        amount: u256,
+        pub user: ContractAddress,
+        pub token: ContractAddress,
+        pub amount: u256,
     }
 
     #[derive(Drop, starknet::Event)]
