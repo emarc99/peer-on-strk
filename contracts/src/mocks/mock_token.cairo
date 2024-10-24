@@ -44,14 +44,14 @@ pub mod MockToken {
 
     #[constructor]
     fn constructor(ref self: ContractState) {
-        self.token_name.write("Reward Token");
-        self.symbol.write("RWT");
+        self.token_name.write("Mock Token");
+        self.symbol.write("MKT");
         self.decimal.write(18);
         self.owner.write(get_caller_address());
     }
 
     #[abi(embed_v0)]
-    impl RewardTokenImpl of IERC20<ContractState> {
+    impl MockTokenImpl of IERC20<ContractState> {
         fn total_supply(self: @ContractState) -> u256 {
             self.total_supply.read()
         }
