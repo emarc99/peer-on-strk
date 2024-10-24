@@ -34,6 +34,11 @@ mod PeerProtocol {
         token: ContractAddress,
     }
 
+    #[constructor]
+    fn constructor(ref self: ContractState, owner: ContractAddress) {
+        self.owner.write(owner);
+    }
+
     #[abi(embed_v0)]
     impl PeerProtocolImpl of IPeerProtocol<ContractState> {
         fn deposit(ref self: ContractState, token_address: ContractAddress, amount: u256) {
