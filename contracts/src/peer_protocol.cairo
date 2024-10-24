@@ -36,6 +36,7 @@ mod PeerProtocol {
 
     #[constructor]
     fn constructor(ref self: ContractState, owner: ContractAddress) {
+        assert!(owner != contract_address_const::<0>(), "zero address detected");
         self.owner.write(owner);
     }
 
