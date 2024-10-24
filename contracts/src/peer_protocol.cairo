@@ -19,6 +19,7 @@ mod PeerProtocol {
     #[derive(Drop, starknet::Event)]
     pub enum Event {
         DepositSuccessful: DepositSuccessful,
+        SupportedTokenAdded: SupportedTokenAdded,
     }
 
     #[derive(Drop, starknet::Event)]
@@ -26,6 +27,11 @@ mod PeerProtocol {
         user: ContractAddress,
         token: ContractAddress,
         amount: u256,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    pub struct SupportedTokenAdded {
+        token: ContractAddress,
     }
 
     #[abi(embed_v0)]
@@ -46,6 +52,17 @@ mod PeerProtocol {
             self.token_deposits.entry((caller, token_address)).write(prev_deposit + amount);
 
             self.emit(DepositSuccessful {user: caller, token: token_address, amount: amount});
+        }
+
+        fn add_supported_token(ref self: ContractState, token_address: ContractAddress) {
+            let caller = get_caller_address();
+
+            assert!(caller == self.owner.read(), "unauthorized caller");
+            assert!(self.supported_tokens.entry(token_address).read() == false, "token already added");
+
+            self.supported_tokens.entry(token_address).write(true);
+
+            self.emit(SupportedTokenAdded { token: token_address });
         }
     }
 }
