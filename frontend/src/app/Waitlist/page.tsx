@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Head from "next/head";
+import { BriefcaseBusiness, CreditCard, Landmark, ShieldCheck } from "lucide-react";
 
 const WaitList = () => {
     const [userType, setUserType] = useState("individual"); // State to track user type (individual/business)
@@ -113,13 +114,13 @@ const WaitList = () => {
 
                 {/* Lower z-index for background icons */}
                 <div className="absolute inset-0 z-10">
-                    <Image src="/images/bank.svg" height={30} width={30} alt="bank" className="absolute top-[10%] left-[30%] cursor-pointer" />
+                    <Landmark size={30} color="#000000" strokeWidth={1.25} className="absolute top-[10%] left-[30%] cursor-pointer" />
                     <Image src="/images/firm.svg" height={30} width={40} alt="firm" className="absolute top-[25%] left-[15%] cursor-pointer" />
-                    <Image src="/images/security.svg" height={30} width={40} alt="security" className="absolute top-[50%] left-[12.5%] cursor-pointer" />
+                    <ShieldCheck size={30} color="#000000" strokeWidth={1.25} className="absolute top-[50%] left-[12.5%] cursor-pointer"  />
                     <Image src="/images/lend.svg" height={30} width={40} alt="lend" className="absolute top-[50%] right-[12.5%] cursor-pointer" />
                     <Image src="/images/burnt_xion.png" height={30} width={40} alt="blockchain" className="absolute top-[10%] right-[30%] cursor-pointer" />
-                    <Image src="/images/credit.svg" height={30} width={40} alt="credit" className="absolute top-[25%] right-[15%] cursor-pointer" />
-                    <Image src="/images/bag.svg" height={30} width={40} alt="bag" className="absolute left-[22%] bottom-[19%] cursor-pointer" />
+                    <CreditCard size={30} color="#000000" strokeWidth={1.25}  className="absolute top-[25%] right-[15%] cursor-pointer"/>
+                    <BriefcaseBusiness size={30} color="#000000" strokeWidth={1.25}  className="absolute left-[22%] bottom-[20%] cursor-pointer" />
                     <Image src="/images/sool.svg" height={30} width={40} alt="sool" className="absolute right-[22%] bottom-[19%] cursor-pointer" />
                 </div>
             </main>
@@ -128,3 +129,4 @@ const WaitList = () => {
 };
 
 export default WaitList;
+

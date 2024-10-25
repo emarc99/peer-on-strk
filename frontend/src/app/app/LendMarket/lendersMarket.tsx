@@ -5,6 +5,7 @@ import Link from "next/link";
 import Nav from "../Nav";
 import Sidebar from "../sidebar";
 import { LenderData } from "../../../data/LenderData";
+import { Plus } from "lucide-react";
 
 // Constants
 const ITEMS_PER_PAGE = 7;
@@ -266,7 +267,6 @@ const Lender = () => {
         <div className="flex-1 flex flex-col h-full max-h-screen overflow-auto">
           <Nav />
           <Header />
-
           <div className="overflow-x-auto text-black border border-gray-300 mx-4 mb-4">
             <TableHeader />
             <div className="w-full">
@@ -287,11 +287,10 @@ const Lender = () => {
             onMouseLeave={() => setIsHovered(false)}
           >
             <p>Create a Proposal</p>
-            <Image
-              src={isHovered ? "/images/MathPlusHover.png" : "/images/PlusMath.svg"}
-              height={40}
-              width={20}
-              alt="plus"
+            <Plus
+              size={22}
+              strokeWidth={4}
+              color={isHovered ? "#fff" : "#000"}
               className="transition-opacity duration-300 ease-in-out"
             />
           </button>

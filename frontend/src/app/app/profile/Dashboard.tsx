@@ -1,7 +1,6 @@
 import React from "react";
-import Image from "next/image";
-import Info from "../../../../public/images/info.svg";
 import { dashboardItems } from "../../../data/DashboardData"; // Import the data
+import { InfoIcon } from "lucide-react";
 
 const Dashboard = () => {
   return (
@@ -20,12 +19,8 @@ const Dashboard = () => {
 
             {/* Info Icon */}
             {item.info && (
-              <Image
-                src={Info}
-                height={20}
-                width={20}
-                alt="info-icon"
-                className="cursor-pointer absolute top-2 right-3"
+              <InfoIcon
+              className="cursor-pointer absolute top-2 right-3 w-5 h-5 text-gray-500"
               />
             )}
           </div>

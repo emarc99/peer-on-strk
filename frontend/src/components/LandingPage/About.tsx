@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { MoveDownRight } from "lucide-react";
 
 const About = () => {
   return (
@@ -6,13 +6,7 @@ const About = () => {
       <details className="mb-4 cursor-pointer group py-10 border-b border-gray-700">
         <summary className="lg:text-3xl font-light flex justify-between items-center text-base">
           Gradual Liquidation Process
-          <Image
-            src="./images/DownArrow.svg"
-            className="group-open:rotate-[50deg] transition-transform"
-            width={60}
-            height={200}
-            alt=""
-          />
+          <MoveDownRight className="group-open:rotate-[45deg] w-[50px] lg:w-[60px] transition-transform" size={60} color="#fff" strokeWidth={1.25} />
         </summary>
         <p className="mt-2 ml-4 lg:text-xl font-thin font-opensans text-sm">
           To ensure fair market value for collateral, our platform employs limit
@@ -25,13 +19,7 @@ const About = () => {
       <details className="mb-4 cursor-pointer group py-10 border-b border-gray-700">
         <summary className="lg:text-3xl tracking-wide font-extralight flex justify-between items-center text-base">
           Dynamic Proposal System
-          <Image
-            src="./images/DownArrow.svg"
-            className="group-open:rotate-[50deg] transition-transform"
-            width={70}
-            height={200}
-            alt=""
-          />
+          <MoveDownRight className="group-open:rotate-[45deg] w-[50px] lg:w-[60px] transition-transform" size={60} color="#fff" strokeWidth={1.25} />
         </summary>
         <p className="mt-2 ml-4 lg:text-xl font-thin font-opensans text-sm">
           Users on our platform have the ability to create proposals for lending
@@ -48,13 +36,7 @@ const About = () => {
       <details className="mb-4 cursor-pointer group py-10 border-b border-gray-700">
         <summary className="lg:text-3xl tracking-wide font-extralight flex justify-between items-center text-base">
           Immutable Deal Creation
-          <Image
-            src="./images/DownArrow.svg"
-            className="group-open:rotate-[50deg] transition-transform"
-            width={70}
-            height={200}
-            alt=""
-          />
+          <MoveDownRight className="group-open:rotate-[45deg] w-[50px] lg:w-[60px] transition-transform" size={60} color="#fff" strokeWidth={1.25} />
         </summary>
         <p className="mt-2 ml-4 lg:text-xl font-thin font-opensans text-sm">
           Details about immutable deal creation.
@@ -64,13 +46,7 @@ const About = () => {
       <details className="cursor-pointer group py-10">
         <summary className="lg:text-3xl tracking-wide font-extralight flex justify-between items-center text-base">
           Decentralized Peer-to-Peer Lending Deals
-          <Image
-            src="./images/DownArrow.svg"
-            className="group-open:rotate-[50deg] transition-transform"
-            width={70}
-            height={200}
-            alt=""
-          />
+          <MoveDownRight className="group-open:rotate-[45deg] w-[50px] lg:w-[60px] transition-transform" size={60} color="#fff" strokeWidth={1.25} />
         </summary>
         <p className="mt-2 ml-4 lg:text-xl font-thin font-opensans text-sm">
           Peer Protocols decentralized peer-to-peer marketplace serves as the
