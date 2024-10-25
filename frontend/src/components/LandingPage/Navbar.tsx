@@ -5,6 +5,7 @@ import { MenuIcon, XIcon } from "@heroicons/react/outline";
 import React, { useState, useContext } from "react";
 import Image from "next/image";
 import { DarkModeContext } from "./DarkMode";
+import { MoveUpRight } from "lucide-react";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -31,39 +32,19 @@ const Navbar = () => {
             <div className="flex items-center gap-4">
               <Link href="#Discord" className="flex items-center">
                 <p className="cursor-pointer">Discord</p>
-                <Image
-                  src={isDarkMode ? "/images/DarkModeArrow.svg" : "/images/RightArrow.svg"}
-                  width={25}
-                  height={25}
-                  alt="Arrow"
-                />
+                <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-0.5 transform rotate-[10deg]" strokeWidth={1.25} />
               </Link>
               <Link href="#Twitter" className="flex items-center">
                 <p className="cursor-pointer">Twitter</p>
-                <Image
-                  src={isDarkMode ? "/images/DarkModeArrow.svg" : "/images/RightArrow.svg"}
-                  width={25}
-                  height={25}
-                  alt="Arrow"
-                />
+                <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-0.5 transform rotate-[10deg]" strokeWidth={1.25} />
               </Link>
               <Link href="#Blog" className="flex items-center">
                 <p className="cursor-pointer">Blog</p>
-                <Image
-                  src={isDarkMode ? "/images/DarkModeArrow.svg" : "/images/RightArrow.svg"}
-                  width={25}
-                  height={25}
-                  alt="Arrow"
-                />
+                <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-0.5 transform rotate-[10deg]" strokeWidth={1.25} />
               </Link>
               <Link href="#Team" className="flex items-center">
                 <p className="cursor-pointer">Team</p>
-                <Image
-                  src={isDarkMode ? "/images/DarkModeArrow.svg" : "/images/RightArrow.svg"}
-                  width={25}
-                  height={25}
-                  alt="Arrow"
-                />
+                <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-0.5 transform rotate-[10deg]" strokeWidth={1.25} />
               </Link>
             </div>
 
@@ -76,21 +57,11 @@ const Navbar = () => {
             <div className="flex items-center gap-4">
               <Link href="#Careers" className="flex items-center">
                 <p className="cursor-pointer">Careers</p>
-                <Image
-                  src={isDarkMode ? "/images/DarkModeArrow.svg" : "/images/RightArrow.svg"}
-                  width={25}
-                  height={25}
-                  alt="Arrow"
-                />
+                <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-0.5 transform rotate-[10deg]" strokeWidth={1.25} />
               </Link>
               <Link href="#ReachOut" className="flex items-center">
                 <p className="cursor-pointer">Reach Out</p>
-                <Image
-                  src={isDarkMode ? "/images/DarkModeArrow.svg" : "/images/RightArrow.svg"}
-                  width={25}
-                  height={25}
-                  alt="Arrow"
-                />
+                <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-0.5 transform rotate-[10deg]" strokeWidth={1.25} />
               </Link>
             </div>
           </div>
@@ -154,79 +125,39 @@ const Navbar = () => {
         <ul className={`px-6 py-3 my-16 text-start flex flex-col items-start leading-[4rem] text-2xl ${isDarkMode ? "text-white bg-[#0F0F0F]" : "text-black"}`}>
           <li className="flex items-center justify-center">
             <p className="cursor-pointer">Discord</p>
-            <Image
-              src={isDarkMode ? "/images/DarkModeArrow.svg" : "/images/RightArrow.svg"}
-              width={25}
-              height={25}
-              alt="Arrow"
-            />
+            <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-1 transform rotate-[10deg]" strokeWidth={1.25} />
           </li>
           {/* <li className="flex items-center justify-center">
             <p className="cursor-pointer">Twitter</p>
-            <Image
-              src={isDarkMode ? "/images/DarkModeArrow.svg" : "/images/RightArrow.svg"}
-              width={25}
-              height={25}
-              alt="Arrow"
-            />
+            <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-1 transform rotate-[10deg]" strokeWidth={1.25} />
           </li> */}
           <li className="flex items-center justify-center">
             <p className="cursor-pointer">Blog</p>
-            <Image
-              src={isDarkMode ? "/images/DarkModeArrow.svg" : "/images/RightArrow.svg"}
-              width={25}
-              height={25}
-              alt="Arrow"
-            />
+            <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-1 transform rotate-[10deg]" strokeWidth={1.25} />
           </li>
           {/* <li className="flex items-center justify-center">
             <p className="cursor-pointer">Team</p>
-            <Image
-              src={isDarkMode ? "/images/DarkModeArrow.svg" : "/images/RightArrow.svg"}
-              width={25}
-              height={25}
-              alt="Arrow"
-            />
+            <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-1 transform rotate-[10deg]" strokeWidth={1.25} />
           </li> */}
           <li className="flex items-center justify-center">
             <p className="cursor-pointer">Documentation</p>
-            <Image
-              src={isDarkMode ? "/images/DarkModeArrow.svg" : "/images/RightArrow.svg"}
-              width={25}
-              height={25}
-              alt="Arrow"
-            />
+            <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-1 transform rotate-[10deg]" strokeWidth={1.25} />
           </li>
 
           {/* <li className="flex items-center justify-center">
             <p className="cursor-pointer">Careers</p>
-            <Image
-              src={isDarkMode ? "/images/DarkModeArrow.svg" : "/images/RightArrow.svg"}
-              width={25}
-              height={25}
-              alt="Arrow"
-            />
+            <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-1 transform rotate-[10deg]" strokeWidth={1.25} />
           </li> */}
           <li className="flex items-center justify-center">
             <p className="cursor-pointer">Reach Out</p>
-            <Image
-              src={isDarkMode ? "/images/DarkModeArrow.svg" : "/images/RightArrow.svg"}
-              width={25}
-              height={25}
-              alt="Arrow"
-            />
+            <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-1 transform rotate-[10deg]" strokeWidth={1.25} />
           </li>
           <li className="relative">
             {/* Mobile: Show as text */}
             <div className="lg:hidden flex items-center justify-center">
               <Link href="/app" target="_blank" className="flex items-center">
                 <p className="cursor-pointer text-black">Launch</p>
-                <Image
-                  src={isDarkMode ? "/images/DarkModeArrow.svg" : "/images/RightArrow.svg"}
-                  width={25}
-                  height={25}
-                  alt="Arrow"
-                />
+                <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-0.5 transform rotate-[10deg]" strokeWidth={1.25} />
               </Link>
 
             </div>

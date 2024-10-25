@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { tableData } from "../../../data/TransactionHistory";
 import Image from "next/image";
-import PageRight from "../../../../public/images/pageright.svg"
-import PageLeft from "../../../../public/images/pageleft.svg"
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 const Table: React.FC = () => {
     // State to manage the active tab
@@ -79,11 +78,14 @@ const Table: React.FC = () => {
                         Transaction History
                     </button>
                 </div>
-                <div>
-                    <select className="px-4 py-2 border rounded-full text-black">
+                <div className="relative">
+                    <select className="px-4 py-2 border rounded-full text-black  pr-8 appearance-none">
                         <option value="borrow">Borrow</option>
                         <option value="lend">Lend</option>
                     </select>
+                    <ChevronDown
+                      className="cursor-pointer absolute top-3 right-2 w-5 h-5 text-gray-500"
+                    />
                 </div>
             </div>
 
@@ -143,7 +145,7 @@ const Table: React.FC = () => {
                         disabled={currentPage === 1}
                         className={`mx-1 px-4 py-2 border text-black rounded-md ${currentPage === 1 ? "cursor-not-allowed" : ""}`}
                     >
-                        <Image src={PageLeft} height={20} width={20} alt="Previous" />
+                        <ChevronLeft size={20} color="#000000" strokeWidth={2.5} />
                     </button>
 
                     {/* Visible page buttons */}
@@ -166,7 +168,7 @@ const Table: React.FC = () => {
                         disabled={currentPage === totalPages}
                         className={`mx-1 px-4 py-2 border text-black rounded-md ${currentPage === totalPages ? "cursor-not-allowed opacity-50" : ""}`}
                     >
-                        <Image src={PageRight} height={20} width={20} alt="Next" />
+                        <ChevronRight size={20} color="#000000" strokeWidth={2.5} />
                     </button>
                 </div>
             )}

@@ -3,6 +3,7 @@ import Image from "next/image";
 import Nav from "../Nav";
 import Sidebar from "../sidebar";
 import { BorrowerData } from "../../../data/BorrowerData";
+import { CircleArrowLeft, Plus } from "lucide-react";
 
 // Constants
 const ITEMS_PER_PAGE = 7;
@@ -86,13 +87,14 @@ const CreateProposalButton = ({
     onMouseLeave={onMouseLeave}
   >
     <p>Create a Proposal</p>
-    <Image
-      src={isHovered ? "/images/MathPlusHover.png" : "/images/PlusMath.svg"}
-      height={40}
-      width={20}
-      alt="plus"
-      className="transition-opacity duration-300 ease-in-out"
-    />
+    <Plus
+        size={22}
+        strokeWidth={4}
+        absoluteStrokeWidth
+        className={`transition-colors duration-300  ${
+          isHovered ? 'text-white' : 'text-black'
+        }`}
+      />
   </button>
 );
 
@@ -151,7 +153,7 @@ const BorrowersMarket = () => {
         <div className="flex-1 flex flex-col h-full max-h-screen overflow-auto">
           <Nav />
           <Header />
-          
+
           <div className="overflow-x-auto text-black border mx-4 mb-4">
             <TableHeader />
             <div className="w-full grid grid-cols-5 rounded-b-xl text-gray-800">

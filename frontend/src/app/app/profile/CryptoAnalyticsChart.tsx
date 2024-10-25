@@ -1,3 +1,4 @@
+import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -72,11 +73,11 @@ const AnalyticsChart = () => {
     return (
         <div className="bg-white rounded-lg shadow-md mx-4 md:mx-8 text-black relative py-8 px-2 md:px-4">
             {/* Header with title and dropdown */}
-            <div className="px-8 flex justify-between items-center">
+            <div className="px-8 flex justify-between items-center relative">
                 <h2 className="text-lg font-semibold mb-4">Activity Overview</h2>
                 {/* Dropdown to select time period */}
                 <select
-                    className="bg-white border border-gray-300 rounded-full p-2 focus:outline-none focus:ring-0 focus:border-gray-300"
+                    className="bg-white border border-gray-300 rounded-full p-2 focus:outline-none focus:ring-0 focus:border-gray-300 appearance-none"
                     value={timePeriod}
                     onChange={handleTimePeriodChange}
                 >
@@ -87,7 +88,9 @@ const AnalyticsChart = () => {
                     <option value="1 year">1 Year</option>
                     <option value="max">Max</option>
                 </select>
-
+                <ChevronDown
+                    className="cursor-pointer absolute top-3 right-10 w-5 h-5 text-gray-500"
+                />
             </div>
 
             {/* Chart */}

@@ -1,9 +1,8 @@
 import Image from "next/image";
 import React, { useState } from 'react';
-import Settings from "../../../../public/images/Set.svg";
-import Drop from "../../../../public/images/drop.svg";
 import Logo from "../../../../public/images/LogoBlack.svg";
 import USDC from "../../../../public/images/usdc.png"
+import { ChevronDown, Cog } from "lucide-react";
 
 const DepositWithdrawPeer = () => {
     const [amount, setAmount] = useState("");
@@ -28,9 +27,7 @@ const DepositWithdrawPeer = () => {
             <div className='pb-4 flex justify-end'>
                 <div className='flex items-center border py-2 px-4 rounded-3xl border-black cursor-pointer' onClick={() => setIsOpen(!isOpen)}>
                     {selectedOption}
-                    <svg className="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
+                    <ChevronDown size={22} color="#000000" strokeWidth={1.25} />
                 </div>
                 {isOpen && (
                     <div className="absolute mt-10 w-[7rem] md:w-[8.5rem] rounded-md shadow-lg bg-white">
@@ -52,7 +49,7 @@ const DepositWithdrawPeer = () => {
                         <p className='text-xs text-right'>Priority fee</p>
                         <div className='flex items-center border px-3 py-1 rounded-3xl bg-[#0000000D]'>
                             <p className='text-xs'>Minimum</p>
-                            <Image src={Settings} height={15} width={15} alt='settings-icon' />
+                            <Cog size={15} className="m-0.5" color="#000000" strokeWidth={2.25} />
                         </div>
                     </div>
                 </div>
@@ -63,7 +60,7 @@ const DepositWithdrawPeer = () => {
                         <p className='mr-2'>USDC</p>
                         </div>
                         <div className='flex-shrink-0 pl-6'>
-                            <Image src={Drop} height={15} width={15} alt='dropicon' />
+                            <ChevronDown size={22} color="#000000" strokeWidth={1.85} />
                         </div>
                     </div>
 

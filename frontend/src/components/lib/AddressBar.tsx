@@ -43,6 +43,8 @@ const UserModal = () => {
                   src={starkProfile?.profilePicture}
                   className="w-full rounded-full"
                   alt="starknet profile"
+                  width={30}
+                  height={30}
                   onError={() => setImageError(true)}
                 />
               ) : (

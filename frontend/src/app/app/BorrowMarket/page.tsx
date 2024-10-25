@@ -2,14 +2,13 @@
 import Nav from "../Nav";
 import Link from "next/link";
 import Sidebar from "../sidebar";
-import PlusMath from "../../../../public/images/PlusMath.svg";
 import Image from "next/image";
-import PlusMathHover from "../../../../public/images/MathPlusHover.png";
 import BackButton from "../../../../public/images/back-button.svg";
 import Phantom from "../../../../public/images/phantom-icon.svg";
 import { BorrowerData } from "../../../data/BorrowerData";
 import { useState } from "react";
 import PeerProtocol from "../../../../public/images/LogoBlack.svg";
+import { Plus } from "lucide-react";
 
 // Types
 type ModalType = 'create' | 'counter';
@@ -27,7 +26,7 @@ const TableHeader = () => (
 );
 
 // Components/TableRow.tsx
-const TableRow = ({ row, onCounterProposal }: { 
+const TableRow = ({ row, onCounterProposal }: {
   row: any;
   onCounterProposal: () => void;
 }) => (
@@ -63,15 +62,16 @@ const TableRow = ({ row, onCounterProposal }: {
         className="cursor-pointer"
         onClick={onCounterProposal}
       />
+
     </div>
   </div>
 );
 
 // Components/Pagination.tsx
-const Pagination = ({ 
-  currentPage, 
-  totalPages, 
-  onPageChange 
+const Pagination = ({
+  currentPage,
+  totalPages,
+  onPageChange
 }: {
   currentPage: number;
   totalPages: number;
@@ -244,7 +244,7 @@ const BorrowersMarket = () => {
         <Sidebar />
         <div className="flex-1 flex flex-col h-full max-h-screen overflow-auto">
           <Nav />
-          
+
           {/* Header */}
           <div className="flex gap-3 p-4">
             <Link href='/app'>
@@ -287,12 +287,13 @@ const BorrowersMarket = () => {
             onMouseLeave={() => setIsHovered(false)}
           >
             <p>Create a Proposal</p>
-            <Image
-              src={isHovered ? PlusMathHover : PlusMath}
-              height={40}
-              width={20}
-              alt="plus"
-              className="transition-opacity duration-300 ease-in-out"
+            <Plus
+              size={22}
+              strokeWidth={3}
+              absoluteStrokeWidth
+              className={`transition-colors duration-300 ease-in-out  ${
+                isHovered ? 'text-white' : 'text-black'
+              }`}
             />
           </button>
 
