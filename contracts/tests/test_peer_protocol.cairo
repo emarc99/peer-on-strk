@@ -99,3 +99,54 @@ fn test_deposit() {
 
     stop_cheat_caller_address(peer_protocol_address);
 }
+
+#[test]
+fn test_withdraw() {
+    let token_address = deploy_token("MockToken");
+    let peer_protocol_address = deploy_peer_protocol();
+
+    let token = IERC20Dispatcher { contract_address: token_address };
+    let peer_protocol = IPeerProtocolDispatcher { contract_address: peer_protocol_address };
+
+    let owner: ContractAddress = starknet::contract_address_const::<0x123626789>();
+    let caller: ContractAddress = starknet::contract_address_const::<0x122226789>();
+    
+    let mint_amount: u256 = 1000 * ONE_E18;
+    let deposit_amount: u256 = 100 * ONE_E18;
+    let withdraw_amount: u256 = 50 * ONE_E18;
+
+    start_cheat_caller_address(peer_protocol_address, owner);
+    peer_protocol.add_supported_token(token_address);
+    stop_cheat_caller_address(peer_protocol_address);
+
+    // Mint tokens
+    token.mint(caller, mint_amount);
+
+    start_cheat_caller_address(token_address, caller);
+    token.approve(peer_protocol_address, mint_amount);
+    stop_cheat_caller_address(token_address);
+
+    start_cheat_caller_address(peer_protocol_address, caller);
+    peer_protocol.deposit(token_address, deposit_amount);
+
+    let mut spy = spy_events();
+    peer_protocol.withdraw(token_address, withdraw_amount);
+    assert!(
+        token.balance_of(peer_protocol_address) == deposit_amount - withdraw_amount,
+        "incorrect protocol balance after withdrawal"
+    );
+    assert!(
+        token.balance_of(caller) == mint_amount - deposit_amount + withdraw_amount,
+        "incorrect user balance after withdrawal"
+    );
+    let expected_event = PeerProtocol::Event::WithdrawalSuccessful(
+        PeerProtocol::WithdrawalSuccessful { 
+            user: caller, 
+            token: token_address, 
+            amount: withdraw_amount 
+        }
+    );
+    spy.assert_emitted(@array![(peer_protocol_address, expected_event)]);
+
+    stop_cheat_caller_address(peer_protocol_address);
+}
