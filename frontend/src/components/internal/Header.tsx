@@ -6,6 +6,7 @@ import ThemeSwitch from "./util/ThemeSwitch";
 import ConnectButton from "../lib/Connect";
 import Link from "next/link";
 import MenuButton from "./MenuButton";
+import Image from "next/image";
 
 const Header = () => {
   const { address } = useAccount();
@@ -44,7 +45,9 @@ const Header = () => {
         <div className="mx-auto flex h-16 max-w-[--header-max-w] items-center justify-between px-4 md:h-28 md:px-8">
           <div className="hidden w-[18.75rem] md:block">
             <Link href={"/"}>
-              <img
+              <Image
+                width={50}
+                height={40}
                 src="/assets/logo.png"
                 alt="logo"
                 className="h-full w-full"
@@ -53,7 +56,7 @@ const Header = () => {
           </div>
 
           <Link href={"/"} className="block h-[35px] w-[35px] md:hidden">
-            <img src="/assets/mobile-logo.png" alt="" />
+            <Image width={35} height={35} src="/assets/mobile-logo.png" alt="" />
           </Link>
           <div className="relative">
             {address ? (

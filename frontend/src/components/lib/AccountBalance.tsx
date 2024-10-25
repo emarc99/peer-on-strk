@@ -2,6 +2,7 @@ import { useContractRead } from "@starknet-react/core";
 import Erc20Abi from "../../../public/abi/token.abi.json"
 import { ETH_SEPOLIA, STRK_SEPOLIA } from "../internal/helpers/constant";
 import { formatCurrency } from "../internal/helpers";
+import Image from "next/image";
 
 type Props = {
   address: string;
@@ -38,7 +39,7 @@ function AccountBalance({ address, heading = true }: Props) {
         <div className="flex justify-between">
           <div className="flex items-center gap-4">
             <div className="h-8 w-8 rounded-full md:h-12 md:w-12">
-              <img className="w-full" src="/icons/eth.svg" alt="" />
+              <Image width={48} height={48} className="w-full" src="/icons/eth.svg" alt="" />
             </div>
             <div>
               <p className="mb-2 text-md">ETH</p>
@@ -52,7 +53,7 @@ function AccountBalance({ address, heading = true }: Props) {
         <div className="flex justify-between">
           <div className="flex items-center gap-4">
             <div className="h-8 w-8 rounded-full md:h-12 md:w-12">
-              <img className="w-full" src="/icons/strk.svg" alt="" />
+              <Image width={48} height={48} className="w-full" src="/icons/strk.svg" alt="" />
             </div>
             <div>
               <p className="mb-2 text-md">STRK</p>
