@@ -2,14 +2,6 @@
 version = 1
 
 [[package]]
-name = "contracts"
-version = "0.1.0"
-dependencies = [
- "openzeppelin",
- "snforge_std",
-]
-
-[[package]]
 name = "openzeppelin"
 version = "0.15.0"
 source = "git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v0.15.0#f57642960f1c8cffafefb88bfff418eca8510634"
@@ -94,6 +86,14 @@ source = "git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v0.15.0#f5
 name = "openzeppelin_utils"
 version = "0.15.0"
 source = "git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v0.15.0#f57642960f1c8cffafefb88bfff418eca8510634"
+
+[[package]]
+name = "peer_protocol"
+version = "0.1.0"
+dependencies = [
+ "openzeppelin",
+ "snforge_std",
+]
 
 [[package]]
 name = "snforge_scarb_plugin"
