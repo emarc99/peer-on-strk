@@ -42,13 +42,13 @@ async function main() {
     });
 
     // Connect the new contract instance :
-    const myTestContract = new Contract(
+    const peerProtocolContract = new Contract(
         sierraCode.abi,
         deployResponse.deploy.contract_address,
         provider
     );
     console.log(
-        `✅ Contract has been deploy with the address: ${myTestContract.address}`
+        `✅ Contract has been deploy with the address: ${peerProtocolContract.address}`
     );
 }
 main()
