@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { formatInTimeZone } from 'date-fns-tz';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { name, email, role } = body;
+
+    // Format the current date and time in desired timezone as yyyy/MM/dd HH:mm:ss
+    const createdAt = formatInTimeZone(
+      new Date(),
+      process.env.TIMEZONE || 'UTC',
+      'yyyy/MM/dd HH:mm:ss'
+    );
+
+    console.log(createdAt);
 
     const auth = new google.auth.GoogleAuth({
       credentials: {
@@ -23,7 +33,7 @@ export async function POST(request: Request) {
       range: 'Sheet1!A:C',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
-        values: [[name, email, role]],
+        values: [[name, email, role, createdAt]],
       },
     });
 
