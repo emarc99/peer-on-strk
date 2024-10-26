@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     // Format the current date and time in desired timezone as yyyy/MM/dd HH:mm:ss
     const createdAt = formatInTimeZone(
       new Date(),
-      process.env.TIMEZONE || 'UTC',
+      process.env.WAITLIST_TIMEZONE || 'UTC',
       'yyyy/MM/dd HH:mm:ss'
     );
 
