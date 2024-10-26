@@ -7,10 +7,39 @@ import { BriefcaseBusiness, CreditCard, Landmark, ShieldCheck } from "lucide-rea
 const WaitList = () => {
     const [userType, setUserType] = useState("individual"); // State to track user type (individual/business)
     const [role, setRole] = useState("lender"); // State to track if the user is a lender or borrower
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
 
     // Input placeholders will change based on the selected userType
     const namePlaceholder = userType === "individual" ? "Fullname" : "Name of Company";
     const emailPlaceholder = userType === "individual" ? "Email" : "Company Email";
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+      
+        const data = { name, email, role };
+      
+        try {
+          const response = await fetch('/api/addToSheet', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+          });
+      
+          if (response.ok) {
+            alert('Successfully added to the waitlist!');
+            setName('');
+            setEmail('');
+          } else {
+            alert('Failed to add to the waitlist. Please try again.');
+          }
+        } catch (error) {
+          console.error('Error submitting form:', error);
+          alert('An error occurred. Please try again.');
+        }
+      };      
 
     return (
         <>
@@ -74,9 +103,11 @@ const WaitList = () => {
                     </div>
 
                     {/* Form inputs */}
-                    <div className="mt-4">
+                    <form onSubmit={handleSubmit} className="mt-4">
                         <div className="my-3 rounded-3xl border border-black">
                             <input
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
                                 placeholder={namePlaceholder}
                                 type="text"
                                 name="name"
@@ -86,6 +117,8 @@ const WaitList = () => {
                         </div>
                         <div className="my-3 rounded-3xl border border-black">
                             <input
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 placeholder={emailPlaceholder}
                                 type="email"
                                 name="email"
@@ -106,10 +139,10 @@ const WaitList = () => {
                             </select>
                         </div>
 
-                        <button className="bg-black w-[30rem] py-2 rounded-3xl">
+                        <button type="submit" className="bg-black w-[30rem] py-2 rounded-3xl">
                             <Image src="/images/LogoWhite.svg" height={25} width={25} alt="logo" className="mx-auto" />
                         </button>
-                    </div>
+                    </form>
                 </div>
 
                 {/* Lower z-index for background icons */}
