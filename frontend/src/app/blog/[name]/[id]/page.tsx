@@ -81,7 +81,11 @@ const Blog = () => {
             {blogData.intro.heading}
           </a>
           {blogData.sections.map((section) => (
-            <a href={`#${section.section_id}`} className="capitalize">
+            <a
+              href={`#${section.section_id}`}
+              key={section.section_id}
+              className="capitalize"
+            >
               {section.heading}
             </a>
           ))}
