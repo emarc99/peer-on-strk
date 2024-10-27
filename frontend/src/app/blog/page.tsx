@@ -19,7 +19,6 @@ const Blogs = () => {
           <figure className="relative h-full w-full cursor-pointer overflow-clip rounded-[8px] group">
             <Image
               className="md:object-cover transition-all duration-500 group-hover:scale-105"
-              unoptimized
               src={BlogsData.entries[featuredId].banner}
               alt=""
               fill
@@ -87,7 +86,6 @@ const BlogLink = ({
       <div className="relative overflow-clip rounded-[8px] h-[60%]">
         <Image
           className="object-cover rounded-[8px] transition-all duration-500 group-hover:scale-105"
-          unoptimized
           src={image}
           alt={alt}
           fill
@@ -96,7 +94,7 @@ const BlogLink = ({
       <div className="flex flex-col justify-between p-2  h-[40%]">
         <div className="flex">
           <h4 className="font-bold text-xl line-clamp-2 capitalize">{name}</h4>
-          <div className="border p-2 grid place-content-center h-8 rounded-lg">
+          <div className="border border-current p-2 grid place-content-center h-8 rounded-lg">
             <span className="inline-block transition-all duration-300 group-hover:-translate-y-1/4 group-hover:translate-x-1/4">
               <ArrowUpRight size={20} />
             </span>

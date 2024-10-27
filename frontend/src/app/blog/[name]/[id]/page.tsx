@@ -27,9 +27,8 @@ const Blog = () => {
         <figure className="relative h-full w-full  overflow-clip rounded-[8px]">
           <Image
             className="object-cover"
-            unoptimized
             src={BlogsData.entries[blogId].banner}
-            alt=""
+            alt={BlogsData.entries[blogId].banner_alt_text}
             fill
           />
           <div className="absolute bottom-0 min-h-[45%]  left-0 w-full p-2 md:p-4">
@@ -45,7 +44,7 @@ const Blog = () => {
                   {blogData.tags.map((tag) => (
                     <p
                       key={tag}
-                      className="border px-2 p-1 text-sm min-w-[5rem] text-center rounded-full w-fit border-[#ffffff76]"
+                      className="border border-current px-2 p-1 text-sm min-w-[5rem] text-center rounded-full w-fit"
                     >
                       {tag}
                     </p>
