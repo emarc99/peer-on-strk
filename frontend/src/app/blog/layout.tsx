@@ -11,7 +11,9 @@ export default function BlogRootLayout({
 
   return (
     <main className={`flex flex-col min-h-svh ${isDarkMode ? "bg-[#0d101711] text-white" : "bg-[#F5F5F5] text-black"} w-full`}>
+      <header>
       <Navbar />
+      </header>
       {children}
       <Footer />
     </main>

@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import BlogsDataJson from "../../../../data/blogs.json";
 import { BlogsDataType } from "@/types";
 
@@ -10,15 +10,8 @@ const Blog = () => {
   const blogId = params.id as string;
   const blogData = BlogsData.entries[blogId];
 
-  if (!BlogsDataJson.ids.find((id) => id === blogId)) {
-    return (
-      <div className="flex-1 grid place-content-center">
-        <h1 className="flex items-center gap-2">
-          <span className="text-3xl">404 |</span>
-          <span>This page could not be found.</span>
-        </h1>
-      </div>
-    );
+  if (!BlogsDataJson.ids.includes(blogId)) {
+    notFound()
   }
 
   return (
