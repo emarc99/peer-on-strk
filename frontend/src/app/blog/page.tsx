@@ -71,7 +71,7 @@ type BlogLinkProps = {
   id: string;
 };
 
-export const BlogLink = ({
+const BlogLink = ({
   alt,
   createdAt,
   description,
