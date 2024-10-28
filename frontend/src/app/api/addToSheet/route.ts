@@ -5,7 +5,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, role } = body;
+    const { userType, name, email, role } = body;
 
     // Format the current date and time in desired timezone as yyyy/MM/dd HH:mm:ss
     const createdAt = formatInTimeZone(
@@ -13,8 +13,6 @@ export async function POST(request: Request) {
       process.env.WAITLIST_TIMEZONE || 'UTC',
       'yyyy/MM/dd HH:mm:ss'
     );
-
-    console.log(createdAt);
 
     const auth = new google.auth.GoogleAuth({
       credentials: {
@@ -33,7 +31,7 @@ export async function POST(request: Request) {
       range: 'Sheet1!A:C',
       valueInputOption: 'USER_ENTERED',
       requestBody: {
-        values: [[name, email, role, createdAt]],
+        values: [[userType, name, email, role, createdAt]],
       },
     });
 

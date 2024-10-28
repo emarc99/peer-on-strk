@@ -17,7 +17,7 @@ const WaitList = () => {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
       
-        const data = { name, email, role };
+        const data = { userType, name, email, role };
       
         try {
           const response = await fetch('/api/addToSheet', {
