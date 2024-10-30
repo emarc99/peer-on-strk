@@ -12,7 +12,7 @@ mod PeerProtocol {
     struct Storage {
         owner: ContractAddress,
         supported_tokens: Map<ContractAddress, bool>,
-        token_deposits: Map<(ContractAddress, ContractAddress), u256>, // Map<(caller, token_address), amount>
+        token_deposits: Map<(ContractAddress, ContractAddress), u256>,
     }
 
     #[event]
@@ -20,6 +20,7 @@ mod PeerProtocol {
     pub enum Event {
         DepositSuccessful: DepositSuccessful,
         SupportedTokenAdded: SupportedTokenAdded,
+        WithdrawalSuccessful: WithdrawalSuccessful,
     }
 
     #[derive(Drop, starknet::Event)]
@@ -39,6 +40,14 @@ mod PeerProtocol {
         assert!(owner != contract_address_const::<0>(), "zero address detected");
         self.owner.write(owner);
     }
+
+    #[derive(Drop, starknet::Event)]
+    pub struct WithdrawalSuccessful {
+        pub user: ContractAddress,
+        pub token: ContractAddress,
+        pub amount: u256,
+    }
+
 
     #[abi(embed_v0)]
     impl PeerProtocolImpl of IPeerProtocol<ContractState> {
@@ -69,6 +78,28 @@ mod PeerProtocol {
             self.supported_tokens.entry(token_address).write(true);
 
             self.emit(SupportedTokenAdded { token: token_address });
+        }
+
+        fn withdraw(ref self: ContractState, token_address: ContractAddress, amount: u256) {
+            assert!(self.supported_tokens.entry(token_address).read(), "token not supported");
+            assert!(amount > 0, "can't withdraw zero value");
+            let caller = get_caller_address();
+            let key = (caller, token_address);
+            let current_balance = self.token_deposits.entry(key).read();
+            assert!(amount <= current_balance, "insufficient balance");
+        
+            self.token_deposits.entry(key).write(current_balance - amount);
+        
+            let token = IERC20Dispatcher { contract_address: token_address };
+            let transfer = token.transfer(caller, amount);
+            assert!(transfer, "transfer failed");
+                
+            self.emit(WithdrawalSuccessful {
+            user: caller,
+            token: token_address,
+            amount: amount,
+    });
+
         }
     }
 }
