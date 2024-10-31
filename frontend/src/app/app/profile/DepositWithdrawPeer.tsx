@@ -11,8 +11,8 @@ import STRK from "../../../../public/images/starknet.png"
 import { ChevronDown, Cog } from "lucide-react";
 
 // Contract Addresses
-const PROTOCOL_ADDRESS = "0x48197aaa4d1b52f98efb219d48853b09474638c3fb20a5e63cf3b1c5874bc";
-const TOKEN_ADDRESS = "0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d";
+const PROTOCOL_ADDRESS = "";
+const TOKEN_ADDRESS = "";
 
 export default function DepositWithdrawPeer() {
   const [amount, setAmount] = useState('');
