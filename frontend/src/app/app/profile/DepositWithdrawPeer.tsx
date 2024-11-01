@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
 import Image from "next/image"
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { uint256 } from 'starknet'
 import { useContract, useAccount, useNetwork, useContractRead } from '@starknet-react/core'
 import { toast as hotToast } from 'react-hot-toast'
@@ -9,55 +9,71 @@ import { toast as toastify } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import protocolAbi from "../../../../public/abi/protocol.json"
 import mockTokenAbi from "../../../../public/abi/mock_token.json"
+import Erc20Abi from "../../../../public/abi/token.abi.json"
 import Logo from "../../../../public/images/LogoBlack.svg"
 import STRK from "../../../../public/images/starknet.png"
 import ETH from "../../../../public/images/ethereumlogo.svg"
 import { ChevronDown, Cog } from "lucide-react"
-import { formatCurrency } from "../../../components/internal/helpers"
+import { formatCurrency } from "@/components/internal/helpers"
 
-const PROTOCOL_ADDRESS = "0x0241eab3824ce92d6f06ab4b21edb3f1d0a56b6cbf01935d1334a1498561f658"
+const PROTOCOL_ADDRESS = "0x0241eab3824ce92d6f06ab4d21edb3f1d0a56b6cbf01935d1334a1498561f658"
 const TOKEN_ADDRESSES = {
   STRK: "0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
   ETH: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"
 }
 
 interface TokenInfo {
-  symbol: string;
-  address: string;
-  icon: any;
-  decimals: number;
+  symbol: string
+  address: string
+  icon: any
+  decimals: number
 }
 
 export default function DepositWithdrawPeer() {
-  const [amount, setAmount] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [isActionOpen, setIsActionOpen] = useState(false);
-  const [isTokenOpen, setIsTokenOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState("Deposit");
+  const [amount, setAmount] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [isActionOpen, setIsActionOpen] = useState(false)
+  const [isTokenOpen, setIsTokenOpen] = useState(false)
+  const [selectedOption, setSelectedOption] = useState("Deposit")
   const [selectedToken, setSelectedToken] = useState<TokenInfo>({
     symbol: "STRK",
     address: TOKEN_ADDRESSES.STRK,
     icon: STRK,
     decimals: 18
-  });
+  })
 
-  const { account, address } = useAccount();
-
-  // Balance fetching
-  const { data: tokenBalanceData, isLoading: isBalanceLoading } = useContractRead({
-    address: selectedToken.address,
-    abi: mockTokenAbi,
+  const { account, address } = useAccount()
+  const { data: eth, isLoading: ethLoading } = useContractRead({
+    address: TOKEN_ADDRESSES.ETH,
+    abi: Erc20Abi,
     functionName: "balanceOf",
     args: [address!],
     watch: true,
-  });
+  })
 
-  // Calculate formatted balance
-  const getFormattedBalance = () => {
-    if (!tokenBalanceData || typeof tokenBalanceData !== 'object' || !('balance' in tokenBalanceData)) return '0';
-    const rawBalance = (tokenBalanceData.balance as any).low?.toString() || tokenBalanceData.balance.toString();
-    return formatCurrency(rawBalance);
-  };
+  const { data: strk, isLoading: strkLoading } = useContractRead({
+    address: TOKEN_ADDRESSES.STRK,
+    abi: Erc20Abi,
+    functionName: "balanceOf",
+    args: [address!],
+    watch: true,
+  })
+
+  const getBalance = useCallback(() => {
+    if (selectedToken.symbol === "STRK") {
+      // @ts-ignore
+      return Number(formatCurrency(strk?.balance?.low.toString()))
+    } else {
+      // @ts-ignore
+      return Number(formatCurrency(eth?.balance.low.toString()))
+    }
+  }, [eth, strk, selectedToken.symbol])
+
+  const handlePercentageClick = (percentage: number) => {
+    const balance = getBalance()
+    const newAmount = (balance * percentage / 100).toString()
+    setAmount(newAmount)
+  }
 
   const tokens: TokenInfo[] = [
     {
@@ -72,31 +88,25 @@ export default function DepositWithdrawPeer() {
       icon: ETH,
       decimals: 18
     }
-  ];
+  ]
 
   const { contract: tokenContract } = useContract({
     abi: mockTokenAbi,
     address: selectedToken.address,
-  });
+  })
 
   const { contract: protocolContract } = useContract({
     abi: protocolAbi,
     address: PROTOCOL_ADDRESS,
-  });
-
-  const handlePercentageClick = (percentage: number) => {
-    const currentBalance = getFormattedBalance();
-    const calculatedAmount = (Number(currentBalance) * percentage / 100).toFixed(6);
-    setAmount(calculatedAmount);
-  };
+  })
 
   const getUint256FromDecimal = (decimalAmount: string) => {
     try {
-      const amount = Number(decimalAmount);
-      const multiplied = amount * Math.pow(10, selectedToken.decimals);
-      return uint256.bnToUint256(multiplied.toString());
+      const amount = Number(decimalAmount)
+      const multiplied = amount * Math.pow(10, selectedToken.decimals)
+      return uint256.bnToUint256(multiplied.toString())
     } catch (err) {
-      throw new Error('Invalid amount format');
+      throw new Error('Invalid amount format')
     }
   }
 
@@ -107,104 +117,107 @@ export default function DepositWithdrawPeer() {
     }
 
     try {
-      setLoading(true);
+      setLoading(true)
       
-      const amountUint256 = getUint256FromDecimal(amount);
+      const amountUint256 = getUint256FromDecimal(amount)
       
       const approvalCall = tokenContract.populate('approve', [
         PROTOCOL_ADDRESS,
         amountUint256
-      ]);
+      ])
       
-      const approvalTx = await account.execute(approvalCall);
+      const approvalTx = await account.execute(approvalCall)
       
-      await account.waitForTransaction(approvalTx.transaction_hash);
-      toastify.success('Token approval successful');
-      return true;
+      await account.waitForTransaction(approvalTx.transaction_hash)
+      toastify.success('Token approval successful')
+      return true
     } catch (err: any) {
-      hotToast.error(`Approval failed: ${err.message}`);
-      return false;
+      hotToast.error(`Approval failed: ${err.message}`)
+      return false
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    const value = e.target.value
     if (/^\d*\.?\d*$/.test(value)) {
-      setAmount(value);
+      setAmount(value)
     }
-  };
+  }
 
   const handleDeposit = async () => {
     if (!protocolContract || !account) {
-      hotToast.error('Address space is empty');
-      return;
+      hotToast.error('Address space is empty')
+      return
     }
 
     try {
-      setLoading(true);
+      setLoading(true)
       
-      const isApproved = await handleApprove();
-      if (!isApproved) return;
+      const isApproved = await handleApprove()
+      if (!isApproved) return
       
-      const amountUint256 = getUint256FromDecimal(amount);
+      const amountUint256 = getUint256FromDecimal(amount)
       
       const depositCall = protocolContract.populate('deposit', [
         selectedToken.address,
         amountUint256
-      ]);
-
-      const depositTx = await account.execute(depositCall);
+      ])
       
-      await account.waitForTransaction(depositTx.transaction_hash);
-      toastify.success('Deposit successful');
+      const depositTx = await account.execute(depositCall)
+      
+      await account.waitForTransaction(depositTx.transaction_hash)
+      toastify.success('Deposit successful')
+      setAmount('') // Reset amount after successful deposit
     } catch (err: any) {
-      hotToast.error(`Deposit failed: ${err.message}`);
+      hotToast.error(`Deposit failed: ${err.message}`)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   const handleWithdraw = async () => {
     if (!protocolContract || !account) {
-      hotToast.error('Wallet not connected');
-      return;
+      hotToast.error('Wallet not connected')
+      return
     }
 
     try {
-      setLoading(true);
+      setLoading(true)
       
-      const amountUint256 = getUint256FromDecimal(amount);
+      const amountUint256 = getUint256FromDecimal(amount)
       
       const withdrawCall = protocolContract.populate('withdraw', [
         selectedToken.address,
         amountUint256
-      ]);
+      ])
       
-      const withdrawTx = await account.execute(withdrawCall);
+      const withdrawTx = await account.execute(withdrawCall)
       
-      await account.waitForTransaction(withdrawTx.transaction_hash);
-      toastify.success('Withdrawal successful');
+      await account.waitForTransaction(withdrawTx.transaction_hash)
+      toastify.success('Withdrawal successful')
+      setAmount('') // Reset amount after successful withdrawal
     } catch (err: any) {
-      hotToast.error(`Withdrawal failed: ${err.message}`);
+      hotToast.error(`Withdrawal failed: ${err.message}`)
     } finally {
       setLoading(false)
     }
   }
 
   const handleActionSelect = (option: string) => {
-    setSelectedOption(option);
-    setIsActionOpen(false);
+    setSelectedOption(option)
+    setIsActionOpen(false)
+    setAmount('') // Reset amount when switching between deposit/withdraw
   }
 
   const handleTokenSelect = (token: TokenInfo) => {
-    setSelectedToken(token);
-    setIsTokenOpen(false);
-    setAmount(''); // Reset amount when token changes
+    setSelectedToken(token)
+    setIsTokenOpen(false)
+    setAmount('') // Reset amount when switching tokens
   }
 
-  const marketOptions = ["Deposit", "Withdraw"];
+  const marketOptions = ["Deposit", "Withdraw"]
 
   if (!address) {
     return (
@@ -213,10 +226,8 @@ export default function DepositWithdrawPeer() {
           Please connect your wallet first
         </div>
       </div>
-    );
+    )
   }
-
-  const formattedBalance = getFormattedBalance();
 
   return (
     <div className='border border-[#0000001A] bg-white p-6 rounded-[1rem] md:flex-grow flex-col relative text-black w-full md:h-full'>
@@ -292,16 +303,13 @@ export default function DepositWithdrawPeer() {
             className="text-right text-[1.4rem] font-bold bg-transparent outline-none w-[60%] md:w-auto"
           />
         </div>
-        <p className='text-xs'>
-          Available: {isBalanceLoading ? 'Loading...' : `${formattedBalance} ${selectedToken.symbol}`}
-        </p>
+        <p className='text-xs'>Available: {getBalance()}</p>
         <div className='flex gap-2 justify-end'>
           {[25, 50, 75, 100].map((percent) => (
             <button 
               key={percent}
               onClick={() => handlePercentageClick(percent)}
               className='bg-[#0000000D] text-xs px-2 py-1 rounded-md hover:bg-[#0000001A]'
-              disabled={isBalanceLoading}
             >
               {percent}%
             </button>
@@ -311,7 +319,7 @@ export default function DepositWithdrawPeer() {
       <button 
         className={`bg-black text-white rounded-full w-full py-3 mt-4 ${loading ? 'opacity-50' : 'hover:bg-gray-800'}`}
         onClick={selectedOption === "Deposit" ? handleDeposit : handleWithdraw}
-        disabled={loading || isBalanceLoading}
+        disabled={loading}
       >
         {loading ? 'Processing...' : selectedOption}
       </button>
@@ -320,5 +328,5 @@ export default function DepositWithdrawPeer() {
         <Image src={Logo} height={15} width={15} alt='logo-icon' />
       </div>
     </div>
-  );
+  )
 }
