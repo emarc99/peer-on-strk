@@ -7,26 +7,59 @@ import { useContract, useAccount, useNetwork } from '@starknet-react/core';
 import protocolAbi from "../../../../public/abi/protocol.json";
 import mockTokenAbi from "../../../../public/abi/mock_token.json";
 import Logo from "../../../../public/images/LogoBlack.svg";
-import STRK from "../../../../public/images/starknet.png"
+import STRK from "../../../../public/images/starknet.png";
+import ETH from "../../../../public/images/ethereumlogo.svg";
 import { ChevronDown, Cog } from "lucide-react";
 
-// Contract Addresses
-const PROTOCOL_ADDRESS = "";
-const TOKEN_ADDRESS = "";
+// Contract Addresses - you'll need to add the ETH token address
+const PROTOCOL_ADDRESS = "0x0241eab3824ce92d6f06ab4d21edb3f1d0a56b6cbf01935d1334a1498561f658";
+const TOKEN_ADDRESSES = {
+  STRK: "0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d", // Your STRK token address
+  ETH: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"  // Your ETH token address
+};
+
+interface TokenInfo {
+  symbol: string;
+  address: string;
+  icon: any;
+  decimals: number;
+}
 
 export default function DepositWithdrawPeer() {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isActionOpen, setIsActionOpen] = useState(false);
+  const [isTokenOpen, setIsTokenOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState("Deposit");
+  const [selectedToken, setSelectedToken] = useState<TokenInfo>({
+    symbol: "STRK",
+    address: TOKEN_ADDRESSES.STRK,
+    icon: STRK,
+    decimals: 18
+  });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const { account, address } = useAccount();
 
+  const tokens: TokenInfo[] = [
+    {
+      symbol: "STRK",
+      address: TOKEN_ADDRESSES.STRK,
+      icon: STRK,
+      decimals: 18
+    },
+    {
+      symbol: "ETH",
+      address: TOKEN_ADDRESSES.ETH,
+      icon: ETH,
+      decimals: 18
+    }
+  ];
+
   const { contract: tokenContract } = useContract({
     abi: mockTokenAbi,
-    address: TOKEN_ADDRESS,
+    address: selectedToken.address,
   });
 
   const { contract: protocolContract } = useContract({
@@ -37,7 +70,7 @@ export default function DepositWithdrawPeer() {
   const getUint256FromDecimal = (decimalAmount: string) => {
     try {
       const amount = Number(decimalAmount);
-      const multiplied = amount * Math.pow(10, 18);
+      const multiplied = amount * Math.pow(10, selectedToken.decimals);
       return uint256.bnToUint256(multiplied.toString());
     } catch (err) {
       throw new Error('Invalid amount format');
@@ -77,13 +110,13 @@ export default function DepositWithdrawPeer() {
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (/^\d*\.?\d*$/.test(value)) {
-        setAmount(value);
+      setAmount(value);
     }
-  }
+  };
 
   const handleDeposit = async () => {
     if (!protocolContract || !account) {
-      setError('Wallet not connected');
+      setError('Address space is empty');
       return;
     }
 
@@ -97,7 +130,7 @@ export default function DepositWithdrawPeer() {
       const amountUint256 = getUint256FromDecimal(amount);
       
       const depositCall = protocolContract.populate('deposit', [
-        TOKEN_ADDRESS,
+        selectedToken.address,
         amountUint256
       ]);
       
@@ -125,7 +158,7 @@ export default function DepositWithdrawPeer() {
       const amountUint256 = getUint256FromDecimal(amount);
       
       const withdrawCall = protocolContract.populate('withdraw', [
-        TOKEN_ADDRESS,
+        selectedToken.address,
         amountUint256
       ]);
       
@@ -140,9 +173,14 @@ export default function DepositWithdrawPeer() {
     }
   };
 
-  const handleSelectChange = (option: string) => {
+  const handleActionSelect = (option: string) => {
     setSelectedOption(option);
-    setIsOpen(false);
+    setIsActionOpen(false);
+  };
+
+  const handleTokenSelect = (token: TokenInfo) => {
+    setSelectedToken(token);
+    setIsTokenOpen(false);
   };
 
   const marketOptions = ["Deposit", "Withdraw"];
@@ -159,74 +197,100 @@ export default function DepositWithdrawPeer() {
 
   return (
     <div className='border border-[#0000001A] bg-white p-6 rounded-[1rem] md:flex-grow flex-col relative text-black w-full md:h-full'>
-        <div className='pb-4 flex justify-end'>
-            <div className='flex items-center border py-2 px-4 rounded-3xl border-black cursor-pointer' onClick={() => setIsOpen(!isOpen)}>
-                {selectedOption}
-                <ChevronDown size={22} color="#000000" strokeWidth={1.25} />
-            </div>
-            {isOpen && (
-                <div className="absolute mt-10 w-[7rem] md:w-[8.5rem] rounded-md shadow-lg bg-white">
-                    <div className="py-1">
-                        {marketOptions.map((option) => (
-                            <button key={option} onClick={() => handleSelectChange(option)} className={`block w-full text-left px-4 py-2 text-sm ${option === selectedOption ? "bg-gray-100" : ""}`}>
-                                {option}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
+      <div className='pb-4 flex justify-end'>
+        <div className='flex items-center border py-2 px-4 rounded-3xl border-black cursor-pointer' onClick={() => setIsActionOpen(!isActionOpen)}>
+          {selectedOption}
+          <ChevronDown size={22} color="#000000" strokeWidth={1.25} />
         </div>
-        <hr className='border-t pb-4' />
-        <div className='bg-smoke-white py-2 px-6 rounded-lg'>
-            <div className='flex justify-between mb-4'>
-                <p>Your {selectedOption.toLowerCase()}</p>
-                <div className=''>
-                    <p className='text-xs text-right'>Priority fee</p>
-                    <div className='flex items-center border px-3 py-1 rounded-3xl bg-[#0000000D]'>
-                        <p className='text-xs'>Minimum</p>
-                        <Cog size={15} className="m-0.5" color="#000000" strokeWidth={2.25} />
-                    </div>
-                </div>
+        {isActionOpen && (
+          <div className="absolute mt-10 w-[7rem] md:w-[8.5rem] rounded-md shadow-lg bg-white z-20">
+            <div className="py-1">
+              {marketOptions.map((option) => (
+                <button 
+                  key={option} 
+                  onClick={() => handleActionSelect(option)} 
+                  className={`block w-full text-left px-4 py-2 text-sm ${option === selectedOption ? "bg-gray-100" : ""} hover:bg-gray-50`}
+                >
+                  {option}
+                </button>
+              ))}
             </div>
-            <div className='flex gap-4 w-full'>
-                <div className='flex items-center justify-center bg-[#0000000D] py-2 px-4 rounded-xl'>
-                    <div className="flex gap-3 items-center">
-                    <Image src={STRK} width={25} height={25} alt="STRK-Image"/>
-                    <p className='mr-2'>STRK</p>
-                    </div>
-                    <div className='flex-shrink-0 pl-6'>
-                        <ChevronDown size={22} color="#000000" strokeWidth={1.85} />
-                    </div>
-                </div>
+          </div>
+        )}
+      </div>
+      <hr className='border-t pb-4' />
+      <div className='bg-smoke-white py-2 px-6 rounded-lg'>
+        <div className='flex justify-between mb-4'>
+          <p>Your {selectedOption.toLowerCase()}</p>
+          <div className=''>
+            <p className='text-xs text-right'>Priority fee</p>
+            <div className='flex items-center border px-3 py-1 rounded-3xl bg-[#0000000D]'>
+              <p className='text-xs'>Minimum</p>
+              <Cog size={15} className="m-0.5" color="#000000" strokeWidth={2.25} />
+            </div>
+          </div>
+        </div>
+        <div className='flex gap-4 w-full'>
+          <div 
+            className='flex items-center justify-center bg-[#0000000D] py-2 px-4 rounded-xl cursor-pointer'
+            onClick={() => setIsTokenOpen(!isTokenOpen)}
+          >
+            <div className="flex gap-3 items-center">
+              <Image src={selectedToken.icon} width={25} height={25} alt={`${selectedToken.symbol}-Image`}/>
+              <p className='mr-2'>{selectedToken.symbol}</p>
+            </div>
+            <div className='flex-shrink-0 pl-6'>
+              <ChevronDown size={22} color="#000000" strokeWidth={1.85} />
+            </div>
+          </div>
 
-                <input
-                    type="text"
-                    value={amount}
-                    onChange={handleAmountChange}
-                    placeholder="0"
-                    className="text-right text-[1.4rem] font-bold bg-transparent outline-none w-[60%] md:w-auto"
-                />
-            </div>
-            <p className='text-xs'>Available:</p>
-            <div className='flex gap-2 justify-end'>
-                {["25%", "50%", "75%", "100%"].map((percent, index) => (
-                    <button key={index} className='bg-[#0000000D] text-xs px-2 py-1 rounded-md'>{percent}</button>
+          {isTokenOpen && (
+            <div className="absolute mt-16 w-[12rem] rounded-md shadow-lg bg-white z-10">
+              <div className="py-1">
+                {tokens.map((token) => (
+                  <button 
+                    key={token.symbol} 
+                    onClick={() => handleTokenSelect(token)}
+                    className={`block w-full text-left px-4 py-2 text-sm ${token.symbol === selectedToken.symbol ? "bg-gray-100" : ""} hover:bg-gray-50 flex items-center gap-2`}
+                  >
+                    <Image src={token.icon} width={20} height={20} alt={`${token.symbol}-Image`}/>
+                    {token.symbol}
+                  </button>
                 ))}
+              </div>
             </div>
+          )}
+
+          <input
+            type="text"
+            value={amount}
+            onChange={handleAmountChange}
+            placeholder="0"
+            className="text-right text-[1.4rem] font-bold bg-transparent outline-none w-[60%] md:w-auto"
+          />
         </div>
-        <button 
-          className='bg-black text-white rounded-full w-full py-3 mt-4'
-          onClick={selectedOption === "Deposit" ? handleDeposit : handleWithdraw}
-          disabled={loading}
-        >
-          {loading ? 'Processing...' : selectedOption}
-        </button>
-        {error && <p className="text-red-500 mt-2">{error}</p>}
-        {success && <p className="text-green-500 mt-2">{success}</p>}
-        <div className='flex justify-center gap-2 mt-4'>
-            <p className='text-xs opacity-50'>Powered by Peer Protocol</p>
-            <Image src={Logo} height={15} width={15} alt='logo-icon' />
+        <p className='text-xs'>Available:</p>
+        <div className='flex gap-2 justify-end'>
+          {["25%", "50%", "75%", "100%"].map((percent, index) => (
+            <button key={index} className='bg-[#0000000D] text-xs px-2 py-1 rounded-md hover:bg-[#0000001A]'>
+              {percent}
+            </button>
+          ))}
         </div>
+      </div>
+      <button 
+        className={`bg-black text-white rounded-full w-full py-3 mt-4 ${loading ? 'opacity-50' : 'hover:bg-gray-800'}`}
+        onClick={selectedOption === "Deposit" ? handleDeposit : handleWithdraw}
+        disabled={loading}
+      >
+        {loading ? 'Processing...' : selectedOption}
+      </button>
+      {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
+      {success && <p className="text-green-500 mt-2 text-sm">{success}</p>}
+      <div className='flex justify-center gap-2 mt-4'>
+        <p className='text-xs opacity-50'>Powered by Peer Protocol</p>
+        <Image src={Logo} height={15} width={15} alt='logo-icon' />
+      </div>
     </div>
   );
 }
