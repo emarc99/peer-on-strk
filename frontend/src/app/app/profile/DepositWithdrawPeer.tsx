@@ -1,22 +1,25 @@
-"use client";
+"use client"
 
-import Image from "next/image";
-import React, { useState } from 'react';
-import { uint256 } from 'starknet';
-import { useContract, useAccount, useNetwork } from '@starknet-react/core';
-import protocolAbi from "../../../../public/abi/protocol.json";
-import mockTokenAbi from "../../../../public/abi/mock_token.json";
-import Logo from "../../../../public/images/LogoBlack.svg";
-import STRK from "../../../../public/images/starknet.png";
-import ETH from "../../../../public/images/ethereumlogo.svg";
-import { ChevronDown, Cog } from "lucide-react";
+import Image from "next/image"
+import React, { useState } from 'react'
+import { uint256 } from 'starknet'
+import { useContract, useAccount, useNetwork, useContractRead } from '@starknet-react/core'
+import { toast as hotToast } from 'react-hot-toast'
+import { toast as toastify } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import protocolAbi from "../../../../public/abi/protocol.json"
+import mockTokenAbi from "../../../../public/abi/mock_token.json"
+import Logo from "../../../../public/images/LogoBlack.svg"
+import STRK from "../../../../public/images/starknet.png"
+import ETH from "../../../../public/images/ethereumlogo.svg"
+import { ChevronDown, Cog } from "lucide-react"
+import { formatCurrency } from "../../../components/internal/helpers"
 
-// Contract Addresses - you'll need to add the ETH token address
-const PROTOCOL_ADDRESS = "0x0241eab3824ce92d6f06ab4d21edb3f1d0a56b6cbf01935d1334a1498561f658";
+const PROTOCOL_ADDRESS = "0x0241eab3824ce92d6f06ab4b21edb3f1d0a56b6cbf01935d1334a1498561f658"
 const TOKEN_ADDRESSES = {
-  STRK: "0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d", // Your STRK token address
-  ETH: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"  // Your ETH token address
-};
+  STRK: "0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+  ETH: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"
+}
 
 interface TokenInfo {
   symbol: string;
@@ -37,10 +40,24 @@ export default function DepositWithdrawPeer() {
     icon: STRK,
     decimals: 18
   });
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const { account, address } = useAccount();
+
+  // Balance fetching
+  const { data: tokenBalanceData, isLoading: isBalanceLoading } = useContractRead({
+    address: selectedToken.address,
+    abi: mockTokenAbi,
+    functionName: "balanceOf",
+    args: [address!],
+    watch: true,
+  });
+
+  // Calculate formatted balance
+  const getFormattedBalance = () => {
+    if (!tokenBalanceData || typeof tokenBalanceData !== 'object' || !('balance' in tokenBalanceData)) return '0';
+    const rawBalance = (tokenBalanceData.balance as any).low?.toString() || tokenBalanceData.balance.toString();
+    return formatCurrency(rawBalance);
+  };
 
   const tokens: TokenInfo[] = [
     {
@@ -67,6 +84,12 @@ export default function DepositWithdrawPeer() {
     address: PROTOCOL_ADDRESS,
   });
 
+  const handlePercentageClick = (percentage: number) => {
+    const currentBalance = getFormattedBalance();
+    const calculatedAmount = (Number(currentBalance) * percentage / 100).toFixed(6);
+    setAmount(calculatedAmount);
+  };
+
   const getUint256FromDecimal = (decimalAmount: string) => {
     try {
       const amount = Number(decimalAmount);
@@ -75,17 +98,16 @@ export default function DepositWithdrawPeer() {
     } catch (err) {
       throw new Error('Invalid amount format');
     }
-  };
+  }
 
   const handleApprove = async () => {
     if (!tokenContract || !account) {
-      setError('Wallet not connected');
-      return;
+      hotToast.error('Wallet not connected')
+      return false
     }
 
     try {
       setLoading(true);
-      setError(null);
       
       const amountUint256 = getUint256FromDecimal(amount);
       
@@ -97,10 +119,10 @@ export default function DepositWithdrawPeer() {
       const approvalTx = await account.execute(approvalCall);
       
       await account.waitForTransaction(approvalTx.transaction_hash);
-      setSuccess('Token approval successful');
+      toastify.success('Token approval successful');
       return true;
     } catch (err: any) {
-      setError(`Approval failed: ${err.message}`);
+      hotToast.error(`Approval failed: ${err.message}`);
       return false;
     } finally {
       setLoading(false);
@@ -116,13 +138,12 @@ export default function DepositWithdrawPeer() {
 
   const handleDeposit = async () => {
     if (!protocolContract || !account) {
-      setError('Address space is empty');
+      hotToast.error('Address space is empty');
       return;
     }
 
     try {
       setLoading(true);
-      setError(null);
       
       const isApproved = await handleApprove();
       if (!isApproved) return;
@@ -133,27 +154,26 @@ export default function DepositWithdrawPeer() {
         selectedToken.address,
         amountUint256
       ]);
-      
+
       const depositTx = await account.execute(depositCall);
       
       await account.waitForTransaction(depositTx.transaction_hash);
-      setSuccess('Deposit successful');
+      toastify.success('Deposit successful');
     } catch (err: any) {
-      setError(`Deposit failed: ${err.message}`);
+      hotToast.error(`Deposit failed: ${err.message}`);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleWithdraw = async () => {
     if (!protocolContract || !account) {
-      setError('Wallet not connected');
+      hotToast.error('Wallet not connected');
       return;
     }
 
     try {
       setLoading(true);
-      setError(null);
       
       const amountUint256 = getUint256FromDecimal(amount);
       
@@ -165,23 +185,24 @@ export default function DepositWithdrawPeer() {
       const withdrawTx = await account.execute(withdrawCall);
       
       await account.waitForTransaction(withdrawTx.transaction_hash);
-      setSuccess('Withdrawal successful');
+      toastify.success('Withdrawal successful');
     } catch (err: any) {
-      setError(`Withdrawal failed: ${err.message}`);
+      hotToast.error(`Withdrawal failed: ${err.message}`);
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleActionSelect = (option: string) => {
     setSelectedOption(option);
     setIsActionOpen(false);
-  };
+  }
 
   const handleTokenSelect = (token: TokenInfo) => {
     setSelectedToken(token);
     setIsTokenOpen(false);
-  };
+    setAmount(''); // Reset amount when token changes
+  }
 
   const marketOptions = ["Deposit", "Withdraw"];
 
@@ -194,6 +215,8 @@ export default function DepositWithdrawPeer() {
       </div>
     );
   }
+
+  const formattedBalance = getFormattedBalance();
 
   return (
     <div className='border border-[#0000001A] bg-white p-6 rounded-[1rem] md:flex-grow flex-col relative text-black w-full md:h-full'>
@@ -269,11 +292,18 @@ export default function DepositWithdrawPeer() {
             className="text-right text-[1.4rem] font-bold bg-transparent outline-none w-[60%] md:w-auto"
           />
         </div>
-        <p className='text-xs'>Available:</p>
+        <p className='text-xs'>
+          Available: {isBalanceLoading ? 'Loading...' : `${formattedBalance} ${selectedToken.symbol}`}
+        </p>
         <div className='flex gap-2 justify-end'>
-          {["25%", "50%", "75%", "100%"].map((percent, index) => (
-            <button key={index} className='bg-[#0000000D] text-xs px-2 py-1 rounded-md hover:bg-[#0000001A]'>
-              {percent}
+          {[25, 50, 75, 100].map((percent) => (
+            <button 
+              key={percent}
+              onClick={() => handlePercentageClick(percent)}
+              className='bg-[#0000000D] text-xs px-2 py-1 rounded-md hover:bg-[#0000001A]'
+              disabled={isBalanceLoading}
+            >
+              {percent}%
             </button>
           ))}
         </div>
@@ -281,12 +311,10 @@ export default function DepositWithdrawPeer() {
       <button 
         className={`bg-black text-white rounded-full w-full py-3 mt-4 ${loading ? 'opacity-50' : 'hover:bg-gray-800'}`}
         onClick={selectedOption === "Deposit" ? handleDeposit : handleWithdraw}
-        disabled={loading}
+        disabled={loading || isBalanceLoading}
       >
         {loading ? 'Processing...' : selectedOption}
       </button>
-      {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
-      {success && <p className="text-green-500 mt-2 text-sm">{success}</p>}
       <div className='flex justify-center gap-2 mt-4'>
         <p className='text-xs opacity-50'>Powered by Peer Protocol</p>
         <Image src={Logo} height={15} width={15} alt='logo-icon' />
