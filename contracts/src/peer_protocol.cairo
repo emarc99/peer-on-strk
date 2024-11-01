@@ -12,7 +12,28 @@ mod PeerProtocol {
     struct Storage {
         owner: ContractAddress,
         supported_tokens: Map<ContractAddress, bool>,
+        // Mapping: (user, token) => deposited amount
         token_deposits: Map<(ContractAddress, ContractAddress), u256>,
+        // Mapping: (user, token) => borrowed amount
+        borrowed_assets: Map<(ContractAddress, ContractAddress), u256>,
+        // Mapping: (user, token) => lent amount
+        lent_assets: Map<(ContractAddress, ContractAddress), u256>,
+        // Mapping: (user, token) => interest earned
+        interests_earned: Map<(ContractAddress, ContractAddress), u256>,
+    }
+
+    #[derive(Drop, Serde)]
+    struct TokenAssets {
+        token_address: ContractAddress,
+        total_lent: u256,
+        total_borrowed: u256,
+        interest_earned: u256,
+        available_balance: u256,
+    }
+
+    #[derive(Drop, Serde)]
+    struct UserAssets {
+        tokens: Array<TokenAssets>
     }
 
     #[event]
@@ -95,11 +116,14 @@ mod PeerProtocol {
             assert!(transfer, "transfer failed");
                 
             self.emit(WithdrawalSuccessful {
-            user: caller,
-            token: token_address,
-            amount: amount,
-    });
+                user: caller,
+                token: token_address,
+                amount: amount,
+            });
+        }
 
+        fn get_user_assets(self: @ContractState, user: ContractAddress) -> UserAssets {
+            
         }
     }
 }
