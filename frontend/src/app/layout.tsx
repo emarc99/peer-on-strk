@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { DarkModeProvider } from "../components/LandingPage/DarkMode";
 import { StarknetProvider } from "@/components/StarknetProvider";
+import { ToastContainer } from 'react-toastify'
+import { Toaster } from 'react-hot-toast'
+import 'react-toastify/dist/ReactToastify.css'
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,9 +24,12 @@ export default function RootLayout({
       <StarknetProvider>
         <DarkModeProvider>
           <body className={inter.className}>
-          {children}</body>
+            {children}
+            <ToastContainer />
+            <Toaster />
+          </body>
         </DarkModeProvider>
-        </StarknetProvider>
+      </StarknetProvider>
     </html>
   );
 }
