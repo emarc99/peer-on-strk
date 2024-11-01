@@ -154,3 +154,42 @@ fn test_withdraw() {
 
     stop_cheat_caller_address(peer_protocol_address);
 }
+
+#[test]
+fn test_get_user_assets() {
+    let token_address = deploy_token("MockToken");
+    let peer_protocol_address = deploy_peer_protocol();
+
+    let token = IERC20Dispatcher { contract_address: token_address };
+    let caller: ContractAddress = starknet::contract_address_const::<0x122226789>();
+    let mint_amount: u256 = 1000 * ONE_E18;
+
+    let peer_protocol = IPeerProtocolDispatcher { contract_address: peer_protocol_address };
+
+    let owner: ContractAddress = starknet::contract_address_const::<0x123626789>();
+
+    // Prank owner to add supported token in peer protocol
+    start_cheat_caller_address(peer_protocol_address, owner);
+    peer_protocol.add_supported_token(token_address);
+    stop_cheat_caller_address(peer_protocol_address);
+
+    token.mint(caller, mint_amount);
+
+    // Approving peer_protocol contract to spend mock_token
+    start_cheat_caller_address(token_address, caller);
+    token.approve(peer_protocol_address, mint_amount);
+    stop_cheat_caller_address(token_address);
+
+    // Prank caller to deposit into peer protocol
+    start_cheat_caller_address(peer_protocol_address, caller);
+    let deposit_amount: u256 = 100 * ONE_E18;
+
+    peer_protocol.deposit(token_address, deposit_amount);
+
+    let user_assets = peer_protocol.get_user_assets(caller);
+
+    assert!(*user_assets.at(0).available_balance == deposit_amount, "wrong asset available balance");
+    assert!(*user_assets.at(0).token_address == token_address, "wrong asset token");
+
+    stop_cheat_caller_address(peer_protocol_address);
+}
