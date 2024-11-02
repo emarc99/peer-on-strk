@@ -1,17 +1,25 @@
 #[starknet::contract]
 mod PeerProtocol {
+    #[derive(Drop, Serde)]
+    struct UserDeposit {
+        token: ContractAddress,
+        amount: u256,
+    }
+
     use peer_protocol::interfaces::ipeer_protocol::IPeerProtocol;
     use peer_protocol::interfaces::ierc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use starknet::{ContractAddress, get_block_timestamp, get_caller_address, get_contract_address, contract_address_const};
     use core::starknet::storage::{
         StoragePointerReadAccess, StoragePointerWriteAccess, 
-        Map, StoragePathEntry
+        Map, StoragePathEntry,
+        Vec, VecTrait, MutableVecTrait
     };
 
     #[storage]
     struct Storage {
         owner: ContractAddress,
         supported_tokens: Map<ContractAddress, bool>,
+        supported_tokens_list: Vec<ContractAddress>,
         token_deposits: Map<(ContractAddress, ContractAddress), u256>,
     }
 
@@ -100,6 +108,16 @@ mod PeerProtocol {
             amount: amount,
     });
 
+        }
+
+        fn get_user_deposits(self: @ContractState, user: ContractAddress) -> Span<UserDeposit> {
+            let mut user_deposits = array![];
+            for i in 0..self.supported_tokens_list.len() {
+                let token = self.supported_tokens_list.at(i).read();
+                let deposit = self.token_deposits.entry((user, token)).read();
+                user_deposits.append(UserDeposit { token: token, amount: deposit });
+            };
+            user_deposits.span()
         }
     }
 }
