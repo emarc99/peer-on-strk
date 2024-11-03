@@ -161,7 +161,18 @@ mod PeerProtocol {
             user_assets
         }
 
+        /// Returns all active deposits for a given user across supported tokens
+        /// @param user The address of the user whose deposits to retrieve
+        /// @return A Span of UserDeposit structs containing only tokens with non-zero balances
+        ///
+        /// The method:
+        /// - Filters out tokens with zero balances
+        /// - Returns empty span if user has no deposits
+        /// - Includes token address and amount for each active deposit
+
         fn get_user_deposits(self: @ContractState, user: ContractAddress) -> Span<UserDeposit> {
+            assert!(user != contract_address_const::<0>(), "invalid user address");
+
             let mut user_deposits = array![];
             for i in 0..self.supported_token_list.len() {
                 let token = self.supported_token_list.at(i).read();

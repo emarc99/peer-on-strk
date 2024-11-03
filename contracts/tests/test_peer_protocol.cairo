@@ -285,3 +285,15 @@ fn test_get_user_deposits() {
     let random_user_deposits = peer_protocol.get_user_deposits(random_user);
     assert!(random_user_deposits.len() == 0, "random user should have no deposits");
 }
+
+#[test]
+#[should_panic(expected: "invalid user address")]
+fn test_get_user_deposits_with_zero_address() {
+    // Deploy contracts
+    let peer_protocol_address = deploy_peer_protocol();
+    let peer_protocol = IPeerProtocolDispatcher { contract_address: peer_protocol_address };
+
+    // Test with zero address - should panic
+    let zero_address: ContractAddress = starknet::contract_address_const::<0>();
+    peer_protocol.get_user_deposits(zero_address);
+}
