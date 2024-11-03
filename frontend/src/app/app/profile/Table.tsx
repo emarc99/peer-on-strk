@@ -149,8 +149,8 @@ const Table: React.FC = () => {
                                  <div className="ml-2 mt-3">Getting your assets...</div>
                             ) :
                             (currentRows.map((row, index: number) => {
-                                  const tokenAddressHex = toHex(row.token).toString();
-                                  const token = tokens.find(token => token.address === tokenAddressHex);
+                                  const tokenAddressHex = toHex(row.token);
+                                  const token = tokens.find(token => token.address == tokenAddressHex);
                                   return (<tr key={index}>
                                       <td className="p-4 border-b border-l flex gap-3 items-center">
                                           {

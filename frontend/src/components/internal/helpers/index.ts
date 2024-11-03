@@ -48,15 +48,16 @@ function asciiToHex(str: string) {
 }
 
 export function toHex(value: string) {
-    if (!value) return '';
-    if (/^0x[0-9a-fA-F]+$/.test(value)) {
-        return value;
-    }
-    if (/^\d+$/.test(value)) {
-        const bnValue = new BN(value, 10);
-        return `0x${bnValue.toString(16)}`;
-    }
-    return asciiToHex(value);
+  if (!value) return '';
+  if (/^0x[0-9a-fA-F]+$/.test(value)) {
+      return value;
+  }
+  if (/^\d+$/.test(value)) {
+      const bnValue = new BN(value, 10);
+      const hex = bnValue.toString(16);
+      const paddedHex = hex.padStart(64, '0');
+      return `0x${paddedHex}`;
+  }
+  return asciiToHex(value);
 }
-
 
