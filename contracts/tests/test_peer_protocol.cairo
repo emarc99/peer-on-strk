@@ -226,4 +226,9 @@ fn test_get_user_deposits() {
     assert!(deposit1.token != deposit2.token, "duplicate tokens in result");
 
     stop_cheat_caller_address(peer_protocol_address);
+
+    // Test for random user
+    let random_user: ContractAddress = starknet::contract_address_const::<0x987654321>();
+    let random_user_deposits = peer_protocol.get_user_deposits(random_user);
+    assert!(random_user_deposits.len() == 0, "random user should have no deposits");
 }
