@@ -84,6 +84,7 @@ mod PeerProtocol {
             assert!(self.supported_tokens.entry(token_address).read() == false, "token already added");
 
             self.supported_tokens.entry(token_address).write(true);
+            self.supported_tokens_list.append().write(token_address);
 
             self.emit(SupportedTokenAdded { token: token_address });
         }
@@ -115,7 +116,9 @@ mod PeerProtocol {
             for i in 0..self.supported_tokens_list.len() {
                 let token = self.supported_tokens_list.at(i).read();
                 let deposit = self.token_deposits.entry((user, token)).read();
-                user_deposits.append(UserDeposit { token: token, amount: deposit });
+                if deposit > 0 {
+                    user_deposits.append(UserDeposit { token: token, amount: deposit });
+                }
             };
             user_deposits.span()
         }
