@@ -1,3 +1,4 @@
+import BN from 'bn.js';
 export const searchResources = async ({
   resources,
   search,
@@ -36,3 +37,26 @@ export const formatDate = (isoString: string): string => {
   const date = new Date(isoString);
   return date.toLocaleDateString("en-US", options);
 }
+
+
+function asciiToHex(str: string) {
+    let hexArray = ['0x'];
+    for (let i = 0; i < str.length; i++) {
+        hexArray.push(Number(str.charCodeAt(i)).toString(16));
+    }
+    return hexArray.join('');
+}
+
+export function toHex(value: string) {
+    if (!value) return '';
+    if (/^0x[0-9a-fA-F]+$/.test(value)) {
+        return value;
+    }
+    if (/^\d+$/.test(value)) {
+        const bnValue = new BN(value, 10);
+        return `0x${bnValue.toString(16)}`;
+    }
+    return asciiToHex(value);
+}
+
+
