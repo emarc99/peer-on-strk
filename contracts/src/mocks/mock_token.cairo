@@ -43,8 +43,8 @@ pub mod MockToken {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState) {
-        self.token_name.write("Mock Token");
+    fn constructor(ref self: ContractState, name: ByteArray) {
+        self.token_name.write(name);
         self.symbol.write("MKT");
         self.decimal.write(18);
         self.owner.write(get_caller_address());
