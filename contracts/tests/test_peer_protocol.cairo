@@ -14,7 +14,7 @@ use peer_protocol::interfaces::ierc20::{IERC20Dispatcher, IERC20DispatcherTrait}
 const ONE_E18: u256 = 1000000000000000000_u256;
 
 fn deploy_token(name: ByteArray) -> ContractAddress {
-    let contract = declare(name).unwrap().contract_class();
+    let contract = declare("MockToken").unwrap().contract_class();
 
     let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
 
@@ -36,7 +36,7 @@ fn deploy_peer_protocol() -> ContractAddress {
 #[test]
 #[should_panic(expected: "token not supported")]
 fn test_deposit_should_panic_for_unsupported_token() {
-    let token_address = deploy_token("MockToken1");
+    let token_address = deploy_token("MockToken");
     let peer_protocol_address = deploy_peer_protocol();
 
     let token = IERC20Dispatcher { contract_address: token_address };
@@ -61,7 +61,7 @@ fn test_deposit_should_panic_for_unsupported_token() {
 
 #[test]
 fn test_deposit() {
-    let token_address = deploy_token("MockToken1");
+    let token_address = deploy_token("MockToken");
     let peer_protocol_address = deploy_peer_protocol();
 
     let token = IERC20Dispatcher { contract_address: token_address };
@@ -108,7 +108,7 @@ fn test_deposit() {
 
 #[test]
 fn test_withdraw() {
-    let token_address = deploy_token("MockToken1");
+    let token_address = deploy_token("MockToken");
     let peer_protocol_address = deploy_peer_protocol();
 
     let token = IERC20Dispatcher { contract_address: token_address };
