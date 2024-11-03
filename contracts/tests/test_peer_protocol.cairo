@@ -216,13 +216,11 @@ fn test_get_user_deposits() {
     let deposit2 = user_deposits.at(1);
 
     assert!(
-        (*deposit1.token == token1_address && *deposit1.amount == deposit_amount1)
-            || (*deposit1.token == token2_address && *deposit1.amount == deposit_amount2),
+        *deposit1.token == token1_address && *deposit1.amount == deposit_amount1,
         "incorrect deposit1"
     );
     assert!(
-        (*deposit2.token == token1_address && *deposit2.amount == deposit_amount1)
-            || (*deposit2.token == token2_address && *deposit2.amount == deposit_amount2),
+        *deposit2.token == token2_address && *deposit2.amount == deposit_amount2,
         "incorrect deposit2"
     );
     assert!(deposit1.token != deposit2.token, "duplicate tokens in result");
