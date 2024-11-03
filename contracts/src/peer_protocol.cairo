@@ -5,14 +5,31 @@ mod PeerProtocol {
     use starknet::{ContractAddress, get_block_timestamp, get_caller_address, get_contract_address, contract_address_const};
     use core::starknet::storage::{
         StoragePointerReadAccess, StoragePointerWriteAccess, 
-        Map, StoragePathEntry
+        Map, StoragePathEntry, MutableVecTrait, Vec, VecTrait
     };
 
     #[storage]
     struct Storage {
         owner: ContractAddress,
         supported_tokens: Map<ContractAddress, bool>,
+        supported_token_list: Vec<ContractAddress>,
+        // Mapping: (user, token) => deposited amount
         token_deposits: Map<(ContractAddress, ContractAddress), u256>,
+        // Mapping: (user, token) => borrowed amount
+        borrowed_assets: Map<(ContractAddress, ContractAddress), u256>,
+        // Mapping: (user, token) => lent amount
+        lent_assets: Map<(ContractAddress, ContractAddress), u256>,
+        // Mapping: (user, token) => interest earned
+        interests_earned: Map<(ContractAddress, ContractAddress), u256>,
+    }
+
+    #[derive(Drop, Serde)]
+    struct UserAssets {
+        token_address: ContractAddress,
+        total_lent: u256,
+        total_borrowed: u256,
+        interest_earned: u256,
+        available_balance: u256,
     }
 
     #[event]
@@ -76,6 +93,7 @@ mod PeerProtocol {
             assert!(self.supported_tokens.entry(token_address).read() == false, "token already added");
 
             self.supported_tokens.entry(token_address).write(true);
+            self.supported_token_list.append().write(token_address);
 
             self.emit(SupportedTokenAdded { token: token_address });
         }
@@ -95,11 +113,46 @@ mod PeerProtocol {
             assert!(transfer, "transfer failed");
                 
             self.emit(WithdrawalSuccessful {
-            user: caller,
-            token: token_address,
-            amount: amount,
-    });
+                user: caller,
+                token: token_address,
+                amount: amount,
+            });
+        }
 
+        fn get_user_assets(self: @ContractState, user: ContractAddress) -> Array<UserAssets> {
+            let mut user_assets: Array<UserAssets> = ArrayTrait::new();
+
+            for i in 0..self.supported_token_list.len() {
+                let supported_token = self.supported_token_list.at(i).read();
+
+                let total_deposits = self.token_deposits.entry((user, supported_token)).read();
+                let total_borrowed = self.borrowed_assets.entry((user, supported_token)).read();
+                let total_lent = self.lent_assets.entry((user, supported_token)).read();
+                let interest_earned = self.interests_earned.entry((user, supported_token)).read();
+
+                let available_balance = if total_borrowed == 0 {
+                    total_deposits
+                } else {
+                    match total_deposits > total_borrowed {
+                        true => total_deposits - total_borrowed,
+                        false => 0
+                    }
+                };
+
+                let token_assets = UserAssets {
+                    token_address: supported_token,
+                    total_lent,
+                    total_borrowed,
+                    interest_earned,
+                    available_balance
+                };
+
+                if total_deposits > 0 || total_lent > 0 || total_borrowed > 0 {
+                    user_assets.append(token_assets);
+                }
+            };
+
+            user_assets
         }
     }
 }
