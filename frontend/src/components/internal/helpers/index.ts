@@ -63,11 +63,11 @@ export function toHex(value: string) {
 
 export async function getCryptoPrices() {
   try {
-    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,strike&vs_currencies=usd');
+    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,starknet&vs_currencies=usd');
     const data = await response.json();
     return {
       eth: data.ethereum.usd,
-      strk: data.strike.usd,
+      strk: data.starknet.usd,
     };
   } catch (error) {
     console.error('Error fetching crypto prices:', error);
