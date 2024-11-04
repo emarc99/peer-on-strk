@@ -1,20 +1,34 @@
 use core::array::ArrayTrait;
 use starknet::{ContractAddress, get_block_timestamp};
 
+#[derive(Drop, Serde)]
+enum TransactionType {
+    DEPOSIT,
+    WITHDRAWAL
+}
+
 #[derive(Drop, Serde, starknet::Store)]
 struct Transaction {
-    transaction_type: felt252,
+    transaction_type: TransactionType,
     token: ContractAddress,
     amount: u256,
     timestamp: u64,
+    tx_hash: felt252,
 }
 
 #[starknet::contract]
 mod PeerProtocol {
-    use super::Transaction;
+    use super::{Transaction, TransactionType};
     use peer_protocol::interfaces::ipeer_protocol::IPeerProtocol;
     use peer_protocol::interfaces::ierc20::{IERC20Dispatcher, IERC20DispatcherTrait};
-    use starknet::{ContractAddress, get_block_timestamp, get_caller_address, get_contract_address, contract_address_const};
+    use starknet::{
+        ContractAddress, 
+        get_block_timestamp, 
+        get_caller_address, 
+        get_contract_address, 
+        contract_address_const,
+        get_tx_info
+    };
     use core::starknet::storage::{
         StoragePointerReadAccess, StoragePointerWriteAccess, 
         Map, StoragePathEntry
@@ -60,10 +74,11 @@ mod PeerProtocol {
     #[derive(Drop, starknet::Event)]
     pub struct TransactionRecorded {
         pub user: ContractAddress,
-        pub transaction_type: felt252,
+        pub transaction_type: TransactionType,
         pub token: ContractAddress,
         pub amount: u256,
         pub timestamp: u64,
+        pub tx_hash: felt252,
     }
 
     #[constructor]
@@ -92,19 +107,23 @@ mod PeerProtocol {
 
             // Record transaction
             let timestamp = get_block_timestamp();
+            let tx_info = get_tx_info().unwrap();
             let transaction = Transaction {
-                transaction_type: 'DEPOSIT',
+                transaction_type: TransactionType::DEPOSIT,
                 token: token_address,
                 amount,
                 timestamp,
+                tx_hash: tx_info.transaction_hash,
             };
             self._add_transaction(caller, transaction);
+
             self.emit(TransactionRecorded {
                 user: caller,
-                transaction_type: 'DEPOSIT',
+                transaction_type: TransactionType::DEPOSIT,
                 token: token_address,
                 amount,
                 timestamp,
+                tx_hash: tx_info.transaction_hash,
             });
 
             self.emit(DepositSuccessful {user: caller, token: token_address, amount: amount});
@@ -137,19 +156,22 @@ mod PeerProtocol {
 
             // Record transaction
             let timestamp = get_block_timestamp();
+            let tx_info = get_tx_info().unwrap();
             let transaction = Transaction {
-                transaction_type: 'WITHDRAWAL',
+                transaction_type: TransactionType::WITHDRAWAL,
                 token: token_address,
                 amount,
                 timestamp,
+                tx_hash: tx_info.transaction_hash,
             };
             self._add_transaction(caller, transaction);
             self.emit(TransactionRecorded {
                 user: caller,
-                transaction_type: 'WITHDRAWAL',
+                transaction_type: TransactionType::WITHDRAWAL,
                 token: token_address,
                 amount,
                 timestamp,
+                tx_hash: tx_info.transaction_hash,
             });
                 
             self.emit(WithdrawalSuccessful {
@@ -160,7 +182,11 @@ mod PeerProtocol {
         }
 
         fn get_transaction_history(self: @ContractState, user: ContractAddress) -> Array<Transaction> {
-            self.user_transactions.entry(user).read()
+            let transactions = self.user_transactions.entry(user).read();
+            if transactions.len() == 0 {
+                return ArrayTrait::new();
+            }
+            transactions
         }
     }
 
