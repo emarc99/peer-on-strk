@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { tableData } from "../../../data/TransactionHistory";
 import Image from "next/image";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
@@ -7,7 +7,7 @@ import protocolAbi from "../../../../public/abi/protocol.json"
 import { ETH_SEPOLIA, PROTOCOL_ADDRESS, STRK_SEPOLIA } from "@/components/internal/helpers/constant";
 import STRK from "../../../../public/images/starknet.png"
 import ETH from "../../../../public/images/ethereumlogo.svg"
-import { toHex, formatCurrency } from "@/components/internal/helpers";
+import { toHex, formatCurrency, getCryptoPrices } from "@/components/internal/helpers";
 
 const Table: React.FC = () => {
     // State to manage the active tab
@@ -82,6 +82,28 @@ const Table: React.FC = () => {
         }
     };
 
+    // useEffect(() => {
+      //   const fetchAndCalculate = async () => {
+        //     const prices = await getCryptoPrices();
+        //     setUsdValues({
+          //       eth: (ethAmount * prices.eth).toFixed(2),
+          //       strk: (strkAmount * prices.strk).toFixed(2),
+          //     });
+          //   };
+
+          //   fetchAndCalculate();
+          // }, [ethAmount, strkAmount]);
+
+    const [usdValues, setUsdValues] = useState({ eth: 0, strk: 0 });
+    useEffect(() => {
+      async function fetch ()  {
+        const values = await getCryptoPrices();
+        console.log(values)
+        setUsdValues(values)
+      }
+      fetch()
+    }, [])
+
     return (
         <div className="p-6">
             {/* Buttons: Assets, Position Overview, Transaction History, Filter */}
@@ -133,7 +155,8 @@ const Table: React.FC = () => {
                       <thead>
                           <tr className="border bg-smoke-white">
                               <th className="p-4 text-left border-b font-semibold">Token</th>
-                              <th className="p-4 text-left border-b font-semibold">Amount</th>
+                              <th className="p-4 text-left border-b font-semibold">Quantity</th>
+                              <th className="p-4 text-left border-b font-semibold">Value ($)</th>
                           </tr>
                       </thead>
                       <tbody>
@@ -163,6 +186,9 @@ const Table: React.FC = () => {
                                           }
                                       </td>
                                       <td className="p-4 border-b border-l">{Number(formatCurrency(row.amount?.toString())).toFixed(3)}</td>
+                                      <td className="p-4 border-b border-l">
+                                          {token ? (usdValues[token.symbol.toLowerCase() as 'eth' | 'strk'] * formatCurrency(Number(row.amount))).toFixed(3) : '0.000'}
+                                      </td>
                                   </tr>)}))
                           }
                       </tbody>
