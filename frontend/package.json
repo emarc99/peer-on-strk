@@ -17,6 +17,7 @@
     "@types/react-blockies": "^1.4.4",
     "@types/tailwindcss": "^3.1.0",
     "bignumber.js": "^9.1.2",
+    "bn.js": "^5.2.1",
     "chart.js": "^4.4.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",

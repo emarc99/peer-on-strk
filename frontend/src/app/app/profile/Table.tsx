@@ -82,18 +82,6 @@ const Table: React.FC = () => {
         }
     };
 
-    // useEffect(() => {
-      //   const fetchAndCalculate = async () => {
-        //     const prices = await getCryptoPrices();
-        //     setUsdValues({
-          //       eth: (ethAmount * prices.eth).toFixed(2),
-          //       strk: (strkAmount * prices.strk).toFixed(2),
-          //     });
-          //   };
-
-          //   fetchAndCalculate();
-          // }, [ethAmount, strkAmount]);
-
     const [usdValues, setUsdValues] = useState({ eth: 0, strk: 0 });
     useEffect(() => {
       async function fetch ()  {
@@ -169,7 +157,11 @@ const Table: React.FC = () => {
                               </tr>
                           ) : isLoadingUserDeposits || isFetchingUserDeposits ?
                             (
-                                 <div className="ml-2 mt-3">Getting your assets...</div>
+                                 <tr>
+                                    <td colSpan={3} className="p-4 text-center">
+                                        Getting your assets...
+                                  </td>
+                                </tr>
                             ) :
                             (currentRows.map((row, index: number) => {
                                   const tokenAddressHex = toHex(row.token);
@@ -187,8 +179,7 @@ const Table: React.FC = () => {
                                       </td>
                                       <td className="p-4 border-b border-l">{Number(formatCurrency(row.amount?.toString())).toFixed(3)}</td>
                                       <td className="p-4 border-b border-l">
-                                          {token ? (usdValues[token.symbol.toLowerCase() as 'eth' | 'strk'] * formatCurrency(Number(row.amount))).toFixed(3) : '0.000'}
-                                      </td>
+                                        {token ? (usdValues[token.symbol.toLowerCase() as 'eth' | 'strk'] * Number(formatCurrency(Number(row.amount)))).toFixed(3) : '0.000'}                                      </td>
                                   </tr>)}))
                           }
                       </tbody>
@@ -212,14 +203,14 @@ const Table: React.FC = () => {
                           </tr>
                       </thead>
                       <tbody>
-                          {dataForCurrentTab.length === 0 ? (
+                          { !dataForCurrentTab || dataForCurrentTab.length === 0 ? (
                               <tr>
                                   <td colSpan={5} className="p-4 text-center" style={{ minHeight: '100px' }}>
                                       No data available
                                   </td>
                               </tr>
                           ) : (
-                              currentRows.map((row, index) => (
+                              currentRows && currentRows.map((row, index) => (
                                   <tr key={index}>
                                       <td className="p-4 border-b border-l">{row.transactionType}</td>
                                       <td className="p-4 border-b flex items-center">

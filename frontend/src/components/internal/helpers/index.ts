@@ -40,12 +40,10 @@ export const formatDate = (isoString: string): string => {
 
 
 function asciiToHex(str: string) {
-    let hexArray = ['0x'];
-    for (let i = 0; i < str.length; i++) {
-        hexArray.push(Number(str.charCodeAt(i)).toString(16));
-    }
-    return hexArray.join('');
-}
+      if (typeof str == 'string') {
+          return '0x' + Buffer.from(str).toString('hex');
+      }
+  }
 
 export function toHex(value: string) {
   if (!value) return '';
