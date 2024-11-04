@@ -40,12 +40,14 @@ const Table: React.FC = () => {
 
     // Read User Assets
     const {address: user} = useAccount();
-    const {data: userDeposits, isLoading: isLoadingUserDeposits, refetch: refetchUserDeposits, isFetching: isFetchingUserDeposits} = useContractRead({
+    const {data: userDeposits, isLoading: isLoadingUserDeposits, refetch: refetchUserDeposits, isFetching: isFetchingUserDeposits} = useContractRead(
+      user ? {
       abi: protocolAbi,
       address: PROTOCOL_ADDRESS,
       functionName: "get_user_deposits",
-      args: user ? [user] : [],
-    });
+      args: [user],
+    } : ({} as any)
+  );
 
     // Filter data based on the active tab
     const getDataForActiveTab = () => {
@@ -83,13 +85,23 @@ const Table: React.FC = () => {
     };
 
     const [usdValues, setUsdValues] = useState({ eth: 0, strk: 0 });
+    const [isLoadingPrices, setIsLoadingPrices] = useState(false);
+    const [priceError, setPriceError] = useState<string | null>(null);
     useEffect(() => {
       async function fetch ()  {
-        const values = await getCryptoPrices();
-        console.log(values)
-        setUsdValues(values)
+        setIsLoadingPrices(true);
+        setPriceError(null);
+        try {
+          const values = await getCryptoPrices();
+          setUsdValues(values);
+        } catch (error) {
+          setPriceError('Failed to fetch crypto prices');
+          console.error('Error fetching crypto prices:', error);
+      } finally {
+        setIsLoadingPrices(false);
+        }
       }
-      fetch()
+      fetch();
     }, [])
 
     return (
@@ -149,13 +161,13 @@ const Table: React.FC = () => {
                       </thead>
                       <tbody>
                         {
-                          dataForCurrentTab.length === 0 ? (
+                          !dataForCurrentTab || dataForCurrentTab.length === 0 ? (
                               <tr>
                                   <td colSpan={5} className="p-4 text-center" style={{ minHeight: '100px' }}>
                                       No data available
                                   </td>
                               </tr>
-                          ) : isLoadingUserDeposits || isFetchingUserDeposits ?
+                          ) : isLoadingUserDeposits || isFetchingUserDeposits || isLoadingPrices ?
                             (
                                  <tr>
                                     <td colSpan={3} className="p-4 text-center">
@@ -163,8 +175,17 @@ const Table: React.FC = () => {
                                   </td>
                                 </tr>
                             ) :
-                            (currentRows.map((row, index: number) => {
-                                  const tokenAddressHex = toHex(row.token);
+                            (currentRows && currentRows.map((row, index: number) => {
+                                  let tokenAddressHex = "";
+                                  try {
+                                    tokenAddressHex = toHex(row.token?.toString());
+                                  } catch (error) {
+                                    if (error instanceof TypeError || error instanceof Error) {
+                                      console.error(`Error converting token to hex: ${error.message}`);
+                                    } else {
+                                      console.error("An unknown error occurred during token conversion.");
+                                    }
+                                  }
                                   const token = tokens.find(token => token.address == tokenAddressHex);
                                   return (<tr key={index}>
                                       <td className="p-4 border-b border-l flex gap-3 items-center">
@@ -179,7 +200,8 @@ const Table: React.FC = () => {
                                       </td>
                                       <td className="p-4 border-b border-l">{Number(formatCurrency(row.amount?.toString())).toFixed(3)}</td>
                                       <td className="p-4 border-b border-l">
-                                        {token ? (usdValues[token.symbol.toLowerCase() as 'eth' | 'strk'] * Number(formatCurrency(Number(row.amount)))).toFixed(3) : '0.000'}                                      </td>
+                                        {token && !priceError ? (usdValues[token.symbol.toLowerCase() as 'eth' | 'strk'] * Number(formatCurrency(Number(row.amount)))).toFixed(3) : priceError}
+                                      </td>
                                   </tr>)}))
                           }
                       </tbody>

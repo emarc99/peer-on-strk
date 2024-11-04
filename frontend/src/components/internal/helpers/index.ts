@@ -40,24 +40,37 @@ export const formatDate = (isoString: string): string => {
 
 
 function asciiToHex(str: string) {
-      if (typeof str == 'string') {
-          return '0x' + Buffer.from(str).toString('hex');
-      }
+  if (typeof str !== 'string') {
+      throw new TypeError('Input must be a string');
   }
+  return '0x' + Buffer.from(str).toString('hex');
+}
+
 
 export function toHex(value: string) {
-  if (!value) return '';
+  if (typeof value !== 'string') {
+    throw new TypeError('Input must be a string');
+  }
+  if (value.length === 0) return '';
+  // Strict hex format validation
   if (/^0x[0-9a-fA-F]+$/.test(value)) {
-      return value;
+        return value;
+    }
+
+  // Strict numeric validation
+  if (/^[0-9]+$/.test(value)) {
+      try {
+          const bnValue = new BN(value, 10);
+          // Pad to 32 bytes (64 hex characters) for Ethereum compatibility
+            const hex = bnValue.toString(16);
+            const paddedHex = hex.padStart(64, '0');
+            return `0x${paddedHex}`;
+      } catch (error) {
+          throw new Error(`Invalid numeric value: ${value}`);
+      }
+    }
+    return asciiToHex(value);
   }
-  if (/^\d+$/.test(value)) {
-      const bnValue = new BN(value, 10);
-      const hex = bnValue.toString(16);
-      const paddedHex = hex.padStart(64, '0');
-      return `0x${paddedHex}`;
-  }
-  return asciiToHex(value);
-}
 
 export async function getCryptoPrices() {
   try {
