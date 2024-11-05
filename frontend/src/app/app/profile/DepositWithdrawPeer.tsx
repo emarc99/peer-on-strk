@@ -15,8 +15,8 @@ import STRK from "../../../../public/images/starknet.png"
 import ETH from "../../../../public/images/ethereumlogo.svg"
 import { ChevronDown, Cog } from "lucide-react"
 import { formatCurrency } from "@/components/internal/helpers"
+import { PROTOCOL_ADDRESS } from "@/components/internal/helpers/constant";
 
-const PROTOCOL_ADDRESS = "0x0241eab3824ce92d6f06ab4d21edb3f1d0a56b6cbf01935d1334a1498561f658"
 const TOKEN_ADDRESSES = {
   STRK: "0x4718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
   ETH: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"
@@ -118,16 +118,16 @@ export default function DepositWithdrawPeer() {
 
     try {
       setLoading(true)
-      
+
       const amountUint256 = getUint256FromDecimal(amount)
-      
+
       const approvalCall = tokenContract.populate('approve', [
         PROTOCOL_ADDRESS,
         amountUint256
       ])
-      
+
       const approvalTx = await account.execute(approvalCall)
-      
+
       await account.waitForTransaction(approvalTx.transaction_hash)
       toastify.success('Token approval successful')
       return true
@@ -154,19 +154,19 @@ export default function DepositWithdrawPeer() {
 
     try {
       setLoading(true)
-      
+
       const isApproved = await handleApprove()
       if (!isApproved) return
-      
+
       const amountUint256 = getUint256FromDecimal(amount)
-      
+
       const depositCall = protocolContract.populate('deposit', [
         selectedToken.address,
         amountUint256
       ])
-      
+
       const depositTx = await account.execute(depositCall)
-      
+
       await account.waitForTransaction(depositTx.transaction_hash)
       toastify.success('Deposit successful')
       setAmount('') // Reset amount after successful deposit
@@ -185,16 +185,16 @@ export default function DepositWithdrawPeer() {
 
     try {
       setLoading(true)
-      
+
       const amountUint256 = getUint256FromDecimal(amount)
-      
+
       const withdrawCall = protocolContract.populate('withdraw', [
         selectedToken.address,
         amountUint256
       ])
-      
+
       const withdrawTx = await account.execute(withdrawCall)
-      
+
       await account.waitForTransaction(withdrawTx.transaction_hash)
       toastify.success('Withdrawal successful')
       setAmount('') // Reset amount after successful withdrawal
@@ -240,9 +240,9 @@ export default function DepositWithdrawPeer() {
           <div className="absolute mt-10 w-[7rem] md:w-[8.5rem] rounded-md shadow-lg bg-white z-20">
             <div className="py-1">
               {marketOptions.map((option) => (
-                <button 
-                  key={option} 
-                  onClick={() => handleActionSelect(option)} 
+                <button
+                  key={option}
+                  onClick={() => handleActionSelect(option)}
                   className={`block w-full text-left px-4 py-2 text-sm ${option === selectedOption ? "bg-gray-100" : ""} hover:bg-gray-50`}
                 >
                   {option}
@@ -265,7 +265,7 @@ export default function DepositWithdrawPeer() {
           </div>
         </div>
         <div className='flex gap-4 w-full'>
-          <div 
+          <div
             className='flex items-center justify-center bg-[#0000000D] py-2 px-4 rounded-xl cursor-pointer'
             onClick={() => setIsTokenOpen(!isTokenOpen)}
           >
@@ -282,8 +282,8 @@ export default function DepositWithdrawPeer() {
             <div className="absolute mt-16 w-[12rem] rounded-md shadow-lg bg-white z-10">
               <div className="py-1">
                 {tokens.map((token) => (
-                  <button 
-                    key={token.symbol} 
+                  <button
+                    key={token.symbol}
                     onClick={() => handleTokenSelect(token)}
                     className={`block w-full text-left px-4 py-2 text-sm ${token.symbol === selectedToken.symbol ? "bg-gray-100" : ""} hover:bg-gray-50 flex items-center gap-2`}
                   >
@@ -306,7 +306,7 @@ export default function DepositWithdrawPeer() {
         <p className='text-xs'>Available: {getBalance()}</p>
         <div className='flex gap-2 justify-end'>
           {[25, 50, 75, 100].map((percent) => (
-            <button 
+            <button
               key={percent}
               onClick={() => handlePercentageClick(percent)}
               className='bg-[#0000000D] text-xs px-2 py-1 rounded-md hover:bg-[#0000001A]'
@@ -316,7 +316,7 @@ export default function DepositWithdrawPeer() {
           ))}
         </div>
       </div>
-      <button 
+      <button
         className={`bg-black text-white rounded-full w-full py-3 mt-4 ${loading ? 'opacity-50' : 'hover:bg-gray-800'}`}
         onClick={selectedOption === "Deposit" ? handleDeposit : handleWithdraw}
         disabled={loading}
