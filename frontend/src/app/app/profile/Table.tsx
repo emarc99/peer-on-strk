@@ -1,7 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { tableData } from "../../../data/TransactionHistory";
 import Image from "next/image";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { useAccount, useContractRead } from "@starknet-react/core";
+import protocolAbi from "../../../../public/abi/protocol.json"
+import { ETH_SEPOLIA, PROTOCOL_ADDRESS, STRK_SEPOLIA } from "@/components/internal/helpers/constant";
+import STRK from "../../../../public/images/starknet.png"
+import ETH from "../../../../public/images/ethereumlogo.svg"
+import { toHex, formatCurrency, getCryptoPrices } from "@/components/internal/helpers";
 
 const Table: React.FC = () => {
     // State to manage the active tab
@@ -11,12 +17,45 @@ const Table: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const rowsPerPage = 5;
 
+    interface TokenInfo {
+      symbol: string
+      address: string
+      icon: any
+      decimals: number
+    }
+    const tokens: TokenInfo[] = [
+      {
+        symbol: "STRK",
+        address: STRK_SEPOLIA,
+        icon: STRK,
+        decimals: 18
+      },
+      {
+        symbol: "ETH",
+        address: ETH_SEPOLIA,
+        icon: ETH,
+        decimals: 18
+      }
+    ]
+
+    // Read User Assets
+    const {address: user} = useAccount();
+    const {data: userDeposits, isLoading: isLoadingUserDeposits, refetch: refetchUserDeposits, isFetching: isFetchingUserDeposits} = useContractRead(
+      user ? {
+      abi: protocolAbi,
+      address: PROTOCOL_ADDRESS,
+      functionName: "get_user_deposits",
+      args: [user],
+    } : ({} as any)
+  );
+
     // Filter data based on the active tab
     const getDataForActiveTab = () => {
         switch (activeTab) {
             case "Transaction History":
                 return tableData;
             case "Assets":
+              return Array.isArray(userDeposits) ? userDeposits : [];
             case "Position Overview":
                 // Return an empty array for tabs without data
                 return [];
@@ -27,8 +66,8 @@ const Table: React.FC = () => {
 
     // Get the data for the current page
     const dataForCurrentTab = getDataForActiveTab();
-    const totalPages = Math.ceil(dataForCurrentTab.length / rowsPerPage);
-    const currentRows = dataForCurrentTab.slice(
+    const totalPages = Math.ceil(dataForCurrentTab?.length / rowsPerPage);
+    const currentRows = dataForCurrentTab?.slice(
         (currentPage - 1) * rowsPerPage,
         currentPage * rowsPerPage
     );
@@ -44,6 +83,26 @@ const Table: React.FC = () => {
             setCurrentPage(page);
         }
     };
+
+    const [usdValues, setUsdValues] = useState({ eth: 0, strk: 0 });
+    const [isLoadingPrices, setIsLoadingPrices] = useState(false);
+    const [priceError, setPriceError] = useState<string | null>(null);
+    useEffect(() => {
+      async function fetch ()  {
+        setIsLoadingPrices(true);
+        setPriceError(null);
+        try {
+          const values = await getCryptoPrices();
+          setUsdValues(values);
+        } catch (error) {
+          setPriceError('Failed to fetch crypto prices');
+          console.error('Error fetching crypto prices:', error);
+      } finally {
+        setIsLoadingPrices(false);
+        }
+      }
+      fetch();
+    }, [])
 
     return (
         <div className="p-6">
@@ -90,51 +149,112 @@ const Table: React.FC = () => {
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto text-black my-6">
-                <table className="w-full border-collapse">
-                    <thead>
-                        <tr className="border bg-smoke-white">
-                            <th className="p-4 text-left border-b font-semibold">
-                                Transaction Type
-                            </th>
-                            <th className="p-4 text-left border-b font-semibold">Market</th>
-                            <th className="p-4 text-left border-b font-semibold">Quantity</th>
-                            <th className="p-4 text-left border-b font-semibold">Value ($)</th>
-                            <th className="p-4 text-left border-b font-semibold">
-                                Interest (%)
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {dataForCurrentTab.length === 0 ? (
-                            <tr>
-                                <td colSpan={5} className="p-4 text-center" style={{ minHeight: '100px' }}>
-                                    No data available
-                                </td>
-                            </tr>
-                        ) : (
-                            currentRows.map((row, index) => (
-                                <tr key={index}>
-                                    <td className="p-4 border-b border-l">{row.transactionType}</td>
-                                    <td className="p-4 border-b flex items-center">
-                                        <Image
-                                            src={row.marketImage}
-                                            alt={row.marketName}
-                                            width={24}
-                                            height={24}
-                                            className="rounded-full mr-2"
-                                        />
-                                        {row.marketName}
-                                    </td>
-                                    <td className="p-4 border-b">{row.quantity}</td>
-                                    <td className="p-4 border-b">{row.value}</td>
-                                    <td className="p-4 border-b border-r">{row.interest}</td>
+            {activeTab === "Assets" &&
+              <div className="overflow-x-auto text-black my-6">
+                  <table className="w-full border-collapse">
+                      <thead>
+                          <tr className="border bg-smoke-white">
+                              <th className="p-4 text-left border-b font-semibold">Token</th>
+                              <th className="p-4 text-left border-b font-semibold">Quantity</th>
+                              <th className="p-4 text-left border-b font-semibold">Value ($)</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                        {
+                          !dataForCurrentTab || dataForCurrentTab.length === 0 ? (
+                              <tr>
+                                  <td colSpan={5} className="p-4 text-center" style={{ minHeight: '100px' }}>
+                                      No data available
+                                  </td>
+                              </tr>
+                          ) : isLoadingUserDeposits || isFetchingUserDeposits || isLoadingPrices ?
+                            (
+                                 <tr>
+                                    <td colSpan={3} className="p-4 text-center">
+                                        Getting your assets...
+                                  </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                            ) :
+                            (currentRows && currentRows.map((row, index: number) => {
+                                  let tokenAddressHex = "";
+                                  try {
+                                    tokenAddressHex = toHex(row.token?.toString());
+                                  } catch (error) {
+                                    if (error instanceof TypeError || error instanceof Error) {
+                                      console.error(`Error converting token to hex: ${error.message}`);
+                                    } else {
+                                      console.error("An unknown error occurred during token conversion.");
+                                    }
+                                  }
+                                  const token = tokens.find(token => token.address == tokenAddressHex);
+                                  return (<tr key={index}>
+                                      <td className="p-4 border-b border-l flex gap-3 items-center">
+                                          {
+                                            token && (
+                                              <>
+                                                <Image src={token.icon} width={20} height={20} alt={`${token.symbol} Token`} />
+                                                <span>{token.symbol}</span>
+                                              </>
+                                            )
+                                          }
+                                      </td>
+                                      <td className="p-4 border-b border-l">{Number(formatCurrency(row.amount?.toString())).toFixed(3)}</td>
+                                      <td className="p-4 border-b border-l">
+                                        {token && !priceError ? (usdValues[token.symbol.toLowerCase() as 'eth' | 'strk'] * Number(formatCurrency(Number(row.amount)))).toFixed(3) : priceError}
+                                      </td>
+                                  </tr>)}))
+                          }
+                      </tbody>
+                  </table>
+              </div>
+            }
+            {activeTab === "Transaction History" &&
+              <div className="overflow-x-auto text-black my-6">
+                  <table className="w-full border-collapse">
+                      <thead>
+                          <tr className="border bg-smoke-white">
+                              <th className="p-4 text-left border-b font-semibold">
+                                  Transaction Type
+                              </th>
+                              <th className="p-4 text-left border-b font-semibold">Market</th>
+                              <th className="p-4 text-left border-b font-semibold">Quantity</th>
+                              <th className="p-4 text-left border-b font-semibold">Value ($)</th>
+                              <th className="p-4 text-left border-b font-semibold">
+                                  Interest (%)
+                              </th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          { !dataForCurrentTab || dataForCurrentTab.length === 0 ? (
+                              <tr>
+                                  <td colSpan={5} className="p-4 text-center" style={{ minHeight: '100px' }}>
+                                      No data available
+                                  </td>
+                              </tr>
+                          ) : (
+                              currentRows && currentRows.map((row, index) => (
+                                  <tr key={index}>
+                                      <td className="p-4 border-b border-l">{row.transactionType}</td>
+                                      <td className="p-4 border-b flex items-center">
+                                          <Image
+                                              src={row.marketImage}
+                                              alt={row.marketName}
+                                              width={24}
+                                              height={24}
+                                              className="rounded-full mr-2"
+                                          />
+                                          {row.marketName}
+                                      </td>
+                                      <td className="p-4 border-b">{row.quantity}</td>
+                                      <td className="p-4 border-b">{row.value}</td>
+                                      <td className="p-4 border-b border-r">{row.interest}</td>
+                                  </tr>
+                              ))
+                          )}
+                      </tbody>
+                  </table>
+              </div>
+            }
 
             {/* Pagination Component */}
             {dataForCurrentTab.length > 0 && (

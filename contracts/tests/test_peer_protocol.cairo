@@ -1,32 +1,38 @@
 use starknet::{ContractAddress, get_contract_address};
 use snforge_std::{
     declare, ContractClassTrait, DeclareResultTrait, DeclareResult, start_cheat_caller_address,
-    stop_cheat_caller_address, spy_events, EventSpyAssertionsTrait, start_prank, stop_prank,
-    CheatTarget, set_block_timestamp, get_tx_hash
+    stop_cheat_caller_address, spy_events, EventSpyAssertionsTrait
 };
 
 use peer_protocol::interfaces::ipeer_protocol::{
     IPeerProtocolDispatcher, IPeerProtocolDispatcherTrait
 };
 use peer_protocol::peer_protocol::PeerProtocol;
-use peer_protocol::{Transaction, TransactionType};
+
 use peer_protocol::interfaces::ierc20::{IERC20Dispatcher, IERC20DispatcherTrait};
 
 const ONE_E18: u256 = 1000000000000000000_u256;
 
 fn deploy_token(name: ByteArray) -> ContractAddress {
-    let contract = declare(name).unwrap().contract_class();
-    let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+    let contract = declare("MockToken").unwrap().contract_class();
+
+    let mut constructor_calldata = ArrayTrait::new();
+    name.serialize(ref constructor_calldata);
+
+    let (contract_address, _) = contract.deploy(@constructor_calldata).unwrap();
+
     contract_address
 }
 
 fn deploy_peer_protocol() -> ContractAddress {
     let owner: ContractAddress = starknet::contract_address_const::<0x123626789>();
+
     let mut constructor_calldata = ArrayTrait::new();
     constructor_calldata.append(owner.into());
 
     let contract = declare("PeerProtocol").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@constructor_calldata).unwrap();
+
     contract_address
 }
 
@@ -66,6 +72,7 @@ fn test_deposit() {
     let mint_amount: u256 = 1000 * ONE_E18;
 
     let peer_protocol = IPeerProtocolDispatcher { contract_address: peer_protocol_address };
+
     let owner: ContractAddress = starknet::contract_address_const::<0x123626789>();
 
     // Prank owner to add supported token in peer protocol
@@ -80,10 +87,6 @@ fn test_deposit() {
     token.approve(peer_protocol_address, mint_amount);
     stop_cheat_caller_address(token_address);
 
-    // Set initial timestamp
-    let initial_timestamp: u64 = 1000;
-    set_block_timestamp(initial_timestamp);
-
     // Prank caller to deposit into peer protocol
     start_cheat_caller_address(peer_protocol_address, caller);
     let deposit_amount: u256 = 100 * ONE_E18;
@@ -94,31 +97,14 @@ fn test_deposit() {
     // testing peer_protocol contract balance increase
     assert!(token.balance_of(peer_protocol_address) == deposit_amount, "deposit failed");
 
-    // Get transaction hash
-    let tx_hash = get_tx_hash();
-
-    // testing emitted deposit successful event
-    let expected_deposit_event = PeerProtocol::Event::DepositSuccessful(
+    // testing emitted event
+    let expected_event = PeerProtocol::Event::DepositSuccessful(
         PeerProtocol::DepositSuccessful {
-            user: caller,
-            token: token_address,
-            amount: deposit_amount
+            user: caller, token: token_address, amount: deposit_amount
         }
     );
-    spy.assert_emitted(@array![(peer_protocol_address, expected_deposit_event)]);
 
-    // testing emitted transaction recorded event
-    let expected_tx_event = PeerProtocol::Event::TransactionRecorded(
-        PeerProtocol::TransactionRecorded {
-            user: caller,
-            transaction_type: TransactionType::DEPOSIT,
-            token: token_address,
-            amount: deposit_amount,
-            timestamp: initial_timestamp,
-            tx_hash,
-        }
-    );
-    spy.assert_emitted(@array![(peer_protocol_address, expected_tx_event)]);
+    spy.assert_emitted(@array![(peer_protocol_address, expected_event)]);
 
     stop_cheat_caller_address(peer_protocol_address);
 }
@@ -142,10 +128,6 @@ fn test_withdraw() {
     peer_protocol.add_supported_token(token_address);
     stop_cheat_caller_address(peer_protocol_address);
 
-    // Set initial timestamp
-    let initial_timestamp: u64 = 1000;
-    set_block_timestamp(initial_timestamp);
-
     // Mint tokens
     token.mint(caller, mint_amount);
 
@@ -156,16 +138,8 @@ fn test_withdraw() {
     start_cheat_caller_address(peer_protocol_address, caller);
     peer_protocol.deposit(token_address, deposit_amount);
 
-    // Set withdrawal timestamp
-    let withdrawal_timestamp: u64 = initial_timestamp + 3600;
-    set_block_timestamp(withdrawal_timestamp);
-
     let mut spy = spy_events();
     peer_protocol.withdraw(token_address, withdraw_amount);
-
-    // Get transaction hash
-    let tx_hash = get_tx_hash();
-
     assert!(
         token.balance_of(peer_protocol_address) == deposit_amount - withdraw_amount,
         "incorrect protocol balance after withdrawal"
@@ -174,105 +148,152 @@ fn test_withdraw() {
         token.balance_of(caller) == mint_amount - deposit_amount + withdraw_amount,
         "incorrect user balance after withdrawal"
     );
-
-    // Check withdrawal successful event
-    let expected_withdraw_event = PeerProtocol::Event::WithdrawalSuccessful(
+    let expected_event = PeerProtocol::Event::WithdrawalSuccessful(
         PeerProtocol::WithdrawalSuccessful {
-            user: caller,
-            token: token_address,
-            amount: withdraw_amount
+            user: caller, token: token_address, amount: withdraw_amount
         }
     );
-    spy.assert_emitted(@array![(peer_protocol_address, expected_withdraw_event)]);
-
-    // Check transaction recorded event
-    let expected_tx_event = PeerProtocol::Event::TransactionRecorded(
-        PeerProtocol::TransactionRecorded {
-            user: caller,
-            transaction_type: TransactionType::WITHDRAWAL,
-            token: token_address,
-            amount: withdraw_amount,
-            timestamp: withdrawal_timestamp,
-            tx_hash,
-        }
-    );
-    spy.assert_emitted(@array![(peer_protocol_address, expected_tx_event)]);
+    spy.assert_emitted(@array![(peer_protocol_address, expected_event)]);
 
     stop_cheat_caller_address(peer_protocol_address);
 }
 
 #[test]
-fn test_transaction_history() {
-    let token_address = deploy_token("MockToken");
+fn test_get_user_assets() {
+    let token1_address = deploy_token("MockToken1");
+    let token2_address = deploy_token("MockToken2");
     let peer_protocol_address = deploy_peer_protocol();
 
-    let token = IERC20Dispatcher { contract_address: token_address };
+    let token1 = IERC20Dispatcher { contract_address: token1_address };
+    let token2 = IERC20Dispatcher { contract_address: token2_address };
+    
+    let caller: ContractAddress = starknet::contract_address_const::<0x122226789>();
+    let mint_amount: u256 = 10000 * ONE_E18;
+
     let peer_protocol = IPeerProtocolDispatcher { contract_address: peer_protocol_address };
 
     let owner: ContractAddress = starknet::contract_address_const::<0x123626789>();
-    let caller: ContractAddress = starknet::contract_address_const::<0x122226789>();
-    
-    let mint_amount: u256 = 1000 * ONE_E18;
-    let deposit_amount: u256 = 100 * ONE_E18;
-    let withdraw_amount: u256 = 50 * ONE_E18;
-    
-    // Add token support
+
+    // Prank owner to add supported token in peer protocol
     start_cheat_caller_address(peer_protocol_address, owner);
-    peer_protocol.add_supported_token(token_address);
+    peer_protocol.add_supported_token(token1_address);
+    peer_protocol.add_supported_token(token2_address);
     stop_cheat_caller_address(peer_protocol_address);
-    
-    // Setup initial timestamp
-    let initial_timestamp: u64 = 1000;
-    set_block_timestamp(initial_timestamp);
-    
-    // Mint and approve tokens
-    token.mint(caller, mint_amount);
-    start_cheat_caller_address(token_address, caller);
-    token.approve(peer_protocol_address, mint_amount);
-    stop_cheat_caller_address(token_address);
-    
-    // Perform deposit
+
+    token1.mint(caller, mint_amount);
+    token2.mint(caller, mint_amount);
+
+    // Approving peer_protocol contract to spend mock_token
+    start_cheat_caller_address(token1_address, caller);
+    token1.approve(peer_protocol_address, mint_amount);
+    stop_cheat_caller_address(token1_address);
+
+    start_cheat_caller_address(token2_address, caller);
+    token2.approve(peer_protocol_address, mint_amount);
+    stop_cheat_caller_address(token2_address);
+
+    // Prank caller to deposit into peer protocol
     start_cheat_caller_address(peer_protocol_address, caller);
-    peer_protocol.deposit(token_address, deposit_amount);
-    let deposit_tx_hash = get_tx_hash();
-    
-    // Set new timestamp for withdrawal
-    let withdrawal_timestamp: u64 = initial_timestamp + 3600;
-    set_block_timestamp(withdrawal_timestamp);
-    
-    // Perform withdrawal
-    peer_protocol.withdraw(token_address, withdraw_amount);
-    let withdrawal_tx_hash = get_tx_hash();
-    
-    // Get and verify transaction history
-    let history = peer_protocol.get_transaction_history(caller);
-    assert!(history.len() == 2, 'Should have 2 transactions');
-    
-    // Verify first transaction (deposit)
-    let first_tx = history.at(0);
-    assert!(first_tx.transaction_type == TransactionType::DEPOSIT, 'First should be deposit');
-    assert!(first_tx.token == token_address, 'Wrong token address');
-    assert!(first_tx.amount == deposit_amount, 'Wrong deposit amount');
-    assert!(first_tx.timestamp == initial_timestamp, 'Wrong timestamp');
-    assert!(first_tx.tx_hash == deposit_tx_hash, 'Wrong transaction hash');
-    
-    // Verify second transaction (withdrawal)
-    let second_tx = history.at(1);
-    assert!(second_tx.transaction_type == TransactionType::WITHDRAWAL, 'Second should be withdrawal');
-    assert!(second_tx.token == token_address, 'Wrong token address');
-    assert!(second_tx.amount == withdraw_amount, 'Wrong withdrawal amount');
-    assert!(second_tx.timestamp == withdrawal_timestamp, 'Wrong timestamp');
-    assert!(second_tx.tx_hash == withdrawal_tx_hash, 'Wrong transaction hash');
-    
+    let deposit_amount1: u256 = 1000 * ONE_E18;
+    let deposit_amount2: u256 = 100 * ONE_E18;
+
+    peer_protocol.deposit(token1_address, deposit_amount1);
+    peer_protocol.deposit(token2_address, deposit_amount2);
+
+    let user_assets = peer_protocol.get_user_assets(caller);
+
+    assert!(*user_assets.at(0).available_balance == deposit_amount1, "wrong asset available_balance 1");
+    assert!(*user_assets.at(0).token_address == token1_address, "wrong asset token1");
+
+    assert!(*user_assets.at(1).available_balance == deposit_amount2, "wrong asset available_balance 2");
+    assert!(*user_assets.at(1).token_address == token2_address, "wrong asset token2");
+
     stop_cheat_caller_address(peer_protocol_address);
 }
 
 #[test]
-fn test_empty_history() {
+fn test_get_user_deposits() {
+    // Deploy contracts
+    let token1_address = deploy_token("MockToken1");
+    let token2_address = deploy_token("MockToken2");
+    // add another supported token without balance
+    let token3_address = deploy_token("MockToken3");
+    let peer_protocol_address = deploy_peer_protocol();
+
+    // Setup dispatchers
+    let token1 = IERC20Dispatcher { contract_address: token1_address };
+    let token2 = IERC20Dispatcher { contract_address: token2_address };
+    let peer_protocol = IPeerProtocolDispatcher { contract_address: peer_protocol_address };
+
+    // Setup addresses
+    let owner: ContractAddress = starknet::contract_address_const::<0x123626789>();
+    let user: ContractAddress = starknet::contract_address_const::<0x122226789>();
+
+    // Define amounts
+    let mint_amount: u256 = 1000 * ONE_E18;
+    let deposit_amount1: u256 = 100 * ONE_E18;
+    let deposit_amount2: u256 = 200 * ONE_E18;
+
+    // Add supported tokens
+    start_cheat_caller_address(peer_protocol_address, owner);
+    peer_protocol.add_supported_token(token1_address);
+    peer_protocol.add_supported_token(token2_address);
+    peer_protocol.add_supported_token(token3_address);
+    stop_cheat_caller_address(peer_protocol_address);
+
+    // Mint tokens to user
+    token1.mint(user, mint_amount);
+    token2.mint(user, mint_amount);
+
+    // Approve spending
+    start_cheat_caller_address(token1_address, user);
+    token1.approve(peer_protocol_address, mint_amount);
+    stop_cheat_caller_address(token1_address);
+
+    start_cheat_caller_address(token2_address, user);
+    token2.approve(peer_protocol_address, mint_amount);
+    stop_cheat_caller_address(token2_address);
+
+    // Make deposits
+    start_cheat_caller_address(peer_protocol_address, user);
+    peer_protocol.deposit(token1_address, deposit_amount1);
+    peer_protocol.deposit(token2_address, deposit_amount2);
+
+    // Get and verify user deposits
+    let user_deposits = peer_protocol.get_user_deposits(user);
+
+    assert!(user_deposits.len() == 2, "incorrect number of deposits");
+
+    // Verify deposit amounts for each token
+    let deposit1 = user_deposits.at(0);
+    let deposit2 = user_deposits.at(1);
+
+    assert!(
+        *deposit1.token == token1_address && *deposit1.amount == deposit_amount1,
+        "incorrect deposit1"
+    );
+    assert!(
+        *deposit2.token == token2_address && *deposit2.amount == deposit_amount2,
+        "incorrect deposit2"
+    );
+    assert!(deposit1.token != deposit2.token, "duplicate tokens in result");
+
+    stop_cheat_caller_address(peer_protocol_address);
+
+    // Test for random user
+    let random_user: ContractAddress = starknet::contract_address_const::<0x987654321>();
+    let random_user_deposits = peer_protocol.get_user_deposits(random_user);
+    assert!(random_user_deposits.len() == 0, "random user should have no deposits");
+}
+
+#[test]
+#[should_panic(expected: "invalid user address")]
+fn test_get_user_deposits_with_zero_address() {
+    // Deploy contracts
     let peer_protocol_address = deploy_peer_protocol();
     let peer_protocol = IPeerProtocolDispatcher { contract_address: peer_protocol_address };
-    let user: ContractAddress = starknet::contract_address_const::<0x122226789>();
-    
-    let history = peer_protocol.get_transaction_history(user);
-    assert!(history.len() == 0, 'Should have no transactions');
+
+    // Test with zero address - should panic
+    let zero_address: ContractAddress = starknet::contract_address_const::<0>();
+    peer_protocol.get_user_deposits(zero_address);
 }
