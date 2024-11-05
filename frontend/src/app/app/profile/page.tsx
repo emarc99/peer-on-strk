@@ -9,7 +9,7 @@ import Footer from '../footer';
 import CryptoAnalyticsChart from './CryptoAnalyticsChart';
 import { useAccount } from '@starknet-react/core';
 
-const profile = () => {
+const Profile = () => {
   const { address } = useAccount();
   return (
     <main className="bg-[#F5F5F5] min-h-screen">
@@ -45,4 +45,4 @@ const profile = () => {
   );
 };
 
-export default profile;
+export default Profile;
