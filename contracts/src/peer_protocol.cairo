@@ -50,6 +50,8 @@ mod PeerProtocol {
     };
     use core::array::ArrayTrait;
 
+    const MAX_TRANSACTIONS_PER_USER: usize = 100;
+
     #[storage]
     struct Storage {
         owner: ContractAddress,
@@ -65,6 +67,8 @@ mod PeerProtocol {
         lent_assets: Map<(ContractAddress, ContractAddress), u256>,
         // Mapping: (user, token) => interest earned
         interests_earned: Map<(ContractAddress, ContractAddress), u256>,
+        // Mapping: (user, tx_hash) => bool for duplicate transaction checking
+        processed_tx_hashes: Map<(ContractAddress, felt252), bool>,
     }
 
     #[event]
@@ -183,16 +187,12 @@ mod PeerProtocol {
                 timestamp,
                 tx_hash: tx_info.transaction_hash,
             };
-            self._add_transaction(caller, transaction);
+            match self._add_transaction(caller, transaction.clone()) {
+                Result::Ok(_) => {},
+                Result::Err(e) => panic!("Failed to record transaction"),
+            }
             
-            self.emit(TransactionRecorded {
-                user: caller,
-                transaction_type: TransactionType::WITHDRAWAL,
-                token: token_address,
-                amount,
-                timestamp,
-                tx_hash: tx_info.transaction_hash,
-            });
+            self.emit(TransactionRecorded { user: caller, ..transaction });
                 
             self.emit(WithdrawalSuccessful {
                 user: caller,
@@ -201,12 +201,36 @@ mod PeerProtocol {
             });
         }
 
-        fn get_transaction_history(self: @ContractState, user: ContractAddress) -> Array<Transaction> {
+        /// Retrieves transaction history for a given user
+        /// @param user The address of the user whose transaction history to retrieve
+        /// @return Array of Transaction structs containing:
+        ///   - transaction_type: Type of transaction (DEPOSIT/WITHDRAWAL)
+        ///   - token: Address of the token involved
+        ///   - amount: Amount of tokens in the transaction
+        ///   - timestamp: Block timestamp of the transaction
+        ///   - tx_hash: Transaction hash for verification on block explorer
+        fn get_transaction_history(
+            self: @ContractState,
+            user: ContractAddress,
+            offset: usize,
+            limit: usize
+        ) -> Array<Transaction> {
             let transactions = self.user_transactions.entry(user).read();
             if transactions.len() == 0 {
                 return ArrayTrait::new();
             }
-            transactions
+            let end = if offset + limit > transactions.len() {
+                transactions.len()
+            } else {
+                offset + limit
+            };
+            let mut result = ArrayTrait::new();
+            let mut i = offset;
+            while i < end {
+                result.append(*transactions.at(i));
+                i += 1;
+            }
+            result
         }
 
         fn get_user_assets(self: @ContractState, user: ContractAddress) -> Array<UserAssets> {
@@ -279,15 +303,14 @@ mod PeerProtocol {
                 return Result::Err('max transactions reached');
             }
             
-           // Check for duplicate transaction
-            for tx in transactions {
-                if tx.tx_hash == transaction.tx_hash {
-                    return Result::Err('duplicate transaction');
-                }
+           // Check for duplicate transaction using mapping
+            if self.processed_tx_hashes.entry((user, transaction.tx_hash)).read() {
+               return Result::Err('duplicate transaction');
             }
 
             transactions.append(transaction);
             self.user_transactions.entry(user).write(transactions);
+            self.processed_tx_hashes.entry((user, transaction.tx_hash)).write(true);
             Result::Ok(())
         }
     }
