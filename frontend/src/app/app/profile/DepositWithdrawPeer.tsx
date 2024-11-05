@@ -219,16 +219,6 @@ export default function DepositWithdrawPeer() {
 
   const marketOptions = ["Deposit", "Withdraw"]
 
-  if (!address) {
-    return (
-      <div className="max-w-lg mx-auto p-6">
-        <div className="text-center text-red-500">
-          Please connect your wallet first
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className='border border-[#0000001A] bg-white p-6 rounded-[1rem] md:flex-grow flex-col relative text-black w-full md:h-full'>
       <div className='pb-4 flex justify-end'>
