@@ -137,16 +137,12 @@ mod PeerProtocol {
                 timestamp,
                 tx_hash: tx_info.transaction_hash,
             };
-            self._add_transaction(caller, transaction);
+            match self._add_transaction(caller, transaction.clone()) {
+                Result::Ok(_) => {},
+                Result::Err(e) => panic!("Failed to record transaction"),
+            }
 
-            self.emit(TransactionRecorded {
-                user: caller,
-                transaction_type: TransactionType::DEPOSIT,
-                token: token_address,
-                amount,
-                timestamp,
-                tx_hash: tx_info.transaction_hash,
-            });
+            self.emit(TransactionRecorded { user: caller, ..transaction });
 
             self.emit(DepositSuccessful {user: caller, token: token_address, amount: amount});
         }
@@ -275,10 +271,24 @@ mod PeerProtocol {
 
     #[generate_trait]
     impl InternalFunctions of InternalFunctionsTrait {
-        fn _add_transaction(ref self: ContractState, user: ContractAddress, transaction: Transaction) {
+        fn _add_transaction(ref self: ContractState, user: ContractAddress, transaction: Transaction) -> Result<(), felt252> {
             let mut transactions = self.user_transactions.entry(user).read();
+
+             // Check size limit
+            if transactions.len() >= MAX_TRANSACTIONS_PER_USER {
+                return Result::Err('max transactions reached');
+            }
+            
+           // Check for duplicate transaction
+            for tx in transactions {
+                if tx.tx_hash == transaction.tx_hash {
+                    return Result::Err('duplicate transaction');
+                }
+            }
+
             transactions.append(transaction);
             self.user_transactions.entry(user).write(transactions);
+            Result::Ok(())
         }
     }
 }
