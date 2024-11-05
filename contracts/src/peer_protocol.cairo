@@ -51,6 +51,7 @@ mod PeerProtocol {
     use core::array::ArrayTrait;
 
     const MAX_TRANSACTIONS_PER_USER: usize = 100;
+    const DUPLICATE_WINDOW: u64 = 3600; // 1 hour in seconds
 
     #[storage]
     struct Storage {
@@ -99,6 +100,13 @@ mod PeerProtocol {
         pub amount: u256,
     }
 
+    /// Emitted when a transaction (deposit/withdrawal) is recorded
+    /// @param user The address of the user who performed the transaction
+    /// @param transaction_type Type of transaction (DEPOSIT/WITHDRAWAL)
+    /// @param token Address of the token involved
+    /// @param amount Amount of tokens in the transaction
+    /// @param timestamp Block timestamp of the transaction
+    /// @param tx_hash Transaction hash for verification
     #[derive(Drop, starknet::Event)]
     pub struct TransactionRecorded {
         pub user: ContractAddress,
@@ -303,9 +311,10 @@ mod PeerProtocol {
                 return Result::Err('max transactions reached');
             }
             
-           // Check for duplicate transaction using mapping
-            if self.processed_tx_hashes.entry((user, transaction.tx_hash)).read() {
-               return Result::Err('duplicate transaction');
+            // Check for duplicate transaction using mapping
+            let processed = self.processed_tx_hashes.entry((user, transaction.tx_hash)).read();
+            if processed && transaction.timestamp - processed <= DUPLICATE_WINDOW {
+                    return Result::Err('duplicate transaction');
             }
 
             transactions.append(transaction);
