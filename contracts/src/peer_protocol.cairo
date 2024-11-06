@@ -1,7 +1,7 @@
 use core::array::ArrayTrait;
 use starknet::{ContractAddress, get_block_timestamp};
 
-#[derive(Drop, Serde)]
+#[derive(Drop, Serde, Copy, starknet::Store)]
 enum TransactionType {
     DEPOSIT,
     WITHDRAWAL
@@ -46,30 +46,22 @@ mod PeerProtocol {
     };
     use core::starknet::storage::{
         StoragePointerReadAccess, StoragePointerWriteAccess, 
-        Map, StoragePathEntry, MutableVecTrait, Vec, VecTrait
+        Map, StoragePathEntry, MutableVecTrait, Vec, VecTrait, 
     };
     use core::array::ArrayTrait;
-
-    const MAX_TRANSACTIONS_PER_USER: usize = 100;
-    const DUPLICATE_WINDOW: u64 = 3600; // 1 hour in seconds
+    use core::array::SpanTrait;
 
     #[storage]
     struct Storage {
         owner: ContractAddress,
         supported_tokens: Map<ContractAddress, bool>,
         supported_token_list: Vec<ContractAddress>,
-        // Mapping: (user, token) => deposited amount
         token_deposits: Map<(ContractAddress, ContractAddress), u256>,
-        // Transaction history
-        user_transactions: Map<ContractAddress, Array<Transaction>>,
-        // Mapping: (user, token) => borrowed amount
+        user_transactions_count: Map<ContractAddress, u32>,
+        user_transactions: Map<(ContractAddress, u32), Transaction>,
         borrowed_assets: Map<(ContractAddress, ContractAddress), u256>,
-        // Mapping: (user, token) => lent amount
         lent_assets: Map<(ContractAddress, ContractAddress), u256>,
-        // Mapping: (user, token) => interest earned
         interests_earned: Map<(ContractAddress, ContractAddress), u256>,
-        // Mapping: (user, tx_hash) => bool for duplicate transaction checking
-        processed_tx_hashes: Map<(ContractAddress, felt252), bool>,
     }
 
     #[event]
@@ -100,13 +92,6 @@ mod PeerProtocol {
         pub amount: u256,
     }
 
-    /// Emitted when a transaction (deposit/withdrawal) is recorded
-    /// @param user The address of the user who performed the transaction
-    /// @param transaction_type Type of transaction (DEPOSIT/WITHDRAWAL)
-    /// @param token Address of the token involved
-    /// @param amount Amount of tokens in the transaction
-    /// @param timestamp Block timestamp of the transaction
-    /// @param tx_hash Transaction hash for verification
     #[derive(Drop, starknet::Event)]
     pub struct TransactionRecorded {
         pub user: ContractAddress,
@@ -141,7 +126,7 @@ mod PeerProtocol {
 
             // Record transaction
             let timestamp = get_block_timestamp();
-            let tx_info = get_tx_info().unwrap();
+            let tx_info = get_tx_info();
             let transaction = Transaction {
                 transaction_type: TransactionType::DEPOSIT,
                 token: token_address,
@@ -149,12 +134,16 @@ mod PeerProtocol {
                 timestamp,
                 tx_hash: tx_info.transaction_hash,
             };
-            match self._add_transaction(caller, transaction.clone()) {
-                Result::Ok(_) => {},
-                Result::Err(e) => panic!("Failed to record transaction"),
-            }
+            self._add_transaction(caller, transaction);
 
-            self.emit(TransactionRecorded { user: caller, ..transaction });
+            self.emit(TransactionRecorded {
+                user: caller,
+                transaction_type: TransactionType::DEPOSIT,
+                token: token_address,
+                amount,
+                timestamp,
+                tx_hash: tx_info.transaction_hash,
+            });
 
             self.emit(DepositSuccessful {user: caller, token: token_address, amount: amount});
         }
@@ -187,7 +176,7 @@ mod PeerProtocol {
 
             // Record transaction
             let timestamp = get_block_timestamp();
-            let tx_info = get_tx_info().unwrap();
+            let tx_info = get_tx_info();
             let transaction = Transaction {
                 transaction_type: TransactionType::WITHDRAWAL,
                 token: token_address,
@@ -195,12 +184,16 @@ mod PeerProtocol {
                 timestamp,
                 tx_hash: tx_info.transaction_hash,
             };
-            match self._add_transaction(caller, transaction.clone()) {
-                Result::Ok(_) => {},
-                Result::Err(e) => panic!("Failed to record transaction"),
-            }
+            self._add_transaction(caller, transaction);
             
-            self.emit(TransactionRecorded { user: caller, ..transaction });
+            self.emit(TransactionRecorded {
+                user: caller,
+                transaction_type: TransactionType::WITHDRAWAL,
+                token: token_address,
+                amount,
+                timestamp,
+                tx_hash: tx_info.transaction_hash,
+            });
                 
             self.emit(WithdrawalSuccessful {
                 user: caller,
@@ -209,36 +202,18 @@ mod PeerProtocol {
             });
         }
 
-        /// Retrieves transaction history for a given user
-        /// @param user The address of the user whose transaction history to retrieve
-        /// @return Array of Transaction structs containing:
-        ///   - transaction_type: Type of transaction (DEPOSIT/WITHDRAWAL)
-        ///   - token: Address of the token involved
-        ///   - amount: Amount of tokens in the transaction
-        ///   - timestamp: Block timestamp of the transaction
-        ///   - tx_hash: Transaction hash for verification on block explorer
-        fn get_transaction_history(
-            self: @ContractState,
-            user: ContractAddress,
-            offset: usize,
-            limit: usize
-        ) -> Array<Transaction> {
-            let transactions = self.user_transactions.entry(user).read();
-            if transactions.len() == 0 {
-                return ArrayTrait::new();
-            }
-            let end = if offset + limit > transactions.len() {
-                transactions.len()
-            } else {
-                offset + limit
-            };
-            let mut result = ArrayTrait::new();
-            let mut i = offset;
-            while i < end {
-                result.append(*transactions.at(i));
+        fn get_transaction_history(self: @ContractState, user: ContractAddress) -> Array<Transaction> {
+            let mut transactions = ArrayTrait::new();
+            let count = self.user_transactions_count.entry(user).read();
+            
+            let mut i: u32 = 0;
+            while i < count {
+                let transaction = self.user_transactions.entry((user, i)).read();
+                transactions.append(transaction);
                 i += 1;
-            }
-            result
+            };
+            
+            transactions
         }
 
         fn get_user_assets(self: @ContractState, user: ContractAddress) -> Array<UserAssets> {
@@ -303,24 +278,10 @@ mod PeerProtocol {
 
     #[generate_trait]
     impl InternalFunctions of InternalFunctionsTrait {
-        fn _add_transaction(ref self: ContractState, user: ContractAddress, transaction: Transaction) -> Result<(), felt252> {
-            let mut transactions = self.user_transactions.entry(user).read();
-
-             // Check size limit
-            if transactions.len() >= MAX_TRANSACTIONS_PER_USER {
-                return Result::Err('max transactions reached');
-            }
-            
-            // Check for duplicate transaction using mapping
-            let processed = self.processed_tx_hashes.entry((user, transaction.tx_hash)).read();
-            if processed && transaction.timestamp - processed <= DUPLICATE_WINDOW {
-                    return Result::Err('duplicate transaction');
-            }
-
-            transactions.append(transaction);
-            self.user_transactions.entry(user).write(transactions);
-            self.processed_tx_hashes.entry((user, transaction.tx_hash)).write(true);
-            Result::Ok(())
+        fn _add_transaction(ref self: ContractState, user: ContractAddress, transaction: Transaction) {
+            let current_count = self.user_transactions_count.entry(user).read();
+            self.user_transactions.entry((user, current_count)).write(transaction);
+            self.user_transactions_count.entry(user).write(current_count + 1);
         }
     }
 }

@@ -1,10 +1,10 @@
 use starknet::ContractAddress;
-use peer_protocol::{Transaction, UserAssets, UserDeposit};
-use core::array::ArrayTrait;
-use core::span::Span;
+use peer_protocol::peer_protocol::{Transaction, UserAssets, UserDeposit};
+use core::array::Array;
+use core::array::SpanTrait;
 
 #[starknet::interface]
-pub trait IPeerProtocol<TContractState> {
+trait IPeerProtocol<TContractState> {
     fn deposit(ref self: TContractState, token_address: ContractAddress, amount: u256);
     fn add_supported_token(ref self: TContractState, token_address: ContractAddress);
     fn withdraw(ref self: TContractState, token_address: ContractAddress, amount: u256);
