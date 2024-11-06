@@ -2,6 +2,7 @@
 import { DarkModeContext } from "./DarkMode";
 import React, { useContext } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 interface BlogPostProps {
   title: string;
@@ -27,9 +28,11 @@ const BlogPost: React.FC<BlogPostProps> = ({ title, summary }) => {
         </p>
       </div>
       <div className="flex lg:justify-center justify-start px-8 my-4">
+        <Link href="/blog">
         <button className="bg-black text-white py-2 px-4 rounded border border-transparent hover:bg-white hover:text-black hover:border-black">
           See More
         </button>
+        </Link>
       </div>
     </div>
   );
