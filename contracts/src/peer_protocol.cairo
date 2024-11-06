@@ -56,11 +56,15 @@ mod PeerProtocol {
         owner: ContractAddress,
         supported_tokens: Map<ContractAddress, bool>,
         supported_token_list: Vec<ContractAddress>,
+        // Mapping: (user, token) => deposited amount
         token_deposits: Map<(ContractAddress, ContractAddress), u256>,
         user_transactions_count: Map<ContractAddress, u32>,
         user_transactions: Map<(ContractAddress, u32), Transaction>,
+        // Mapping: (user, token) => borrowed amount
         borrowed_assets: Map<(ContractAddress, ContractAddress), u256>,
+        // Mapping: (user, token) => lent amount
         lent_assets: Map<(ContractAddress, ContractAddress), u256>,
+        // Mapping: (user, token) => interest earned
         interests_earned: Map<(ContractAddress, ContractAddress), u256>,
     }
 
