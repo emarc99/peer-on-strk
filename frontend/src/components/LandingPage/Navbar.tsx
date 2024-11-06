@@ -17,6 +17,7 @@ const Navbar = () => {
 
   return (
     <nav className="flex items-center justify-between py-6 xl:h-[15vh] md:h-[15vh] px-6 xl:px-12">
+      <Link href="/">
       <Image
         src={isDarkMode ? `/images/LogoWhite.svg` : `/images/LogoBlack.svg`}
         width={40}
@@ -24,6 +25,7 @@ const Navbar = () => {
         alt="Logo"
         className="w-8 xl:w-14"
       />
+      </Link>
 
       {/* Desktop Menu */}
       <div className="hidden lg:flex flex-grow items-center">
@@ -38,7 +40,7 @@ const Navbar = () => {
                 <p className="cursor-pointer">Twitter</p>
                 <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-0.5 transform rotate-[10deg]" strokeWidth={1.25} />
               </Link>
-              <Link href="#Blog" className="flex items-center">
+              <Link href="/blog" className="flex items-center">
                 <p className="cursor-pointer">Blog</p>
                 <MoveUpRight size={20} absoluteStrokeWidth color={`${isDarkMode? "#fff": "#000"}`} className="ml-0.5 transform rotate-[10deg]" strokeWidth={1.25} />
               </Link>

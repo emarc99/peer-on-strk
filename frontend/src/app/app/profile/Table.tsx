@@ -8,6 +8,7 @@ import { ETH_SEPOLIA, PROTOCOL_ADDRESS, STRK_SEPOLIA } from "@/components/intern
 import STRK from "../../../../public/images/starknet.png"
 import ETH from "../../../../public/images/ethereumlogo.svg"
 import { toHex, formatCurrency, getCryptoPrices } from "@/components/internal/helpers";
+import AssetsLoader from "../loaders/assetsloader";
 
 const Table: React.FC = () => {
     // State to manage the active tab
@@ -171,7 +172,7 @@ const Table: React.FC = () => {
                             (
                                  <tr>
                                     <td colSpan={3} className="p-4 text-center">
-                                        Getting your assets...
+                                        <AssetsLoader />
                                   </td>
                                 </tr>
                             ) :

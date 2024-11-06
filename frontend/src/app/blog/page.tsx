@@ -24,7 +24,7 @@ const Blogs = () => {
               fill
             />
             <div className="absolute bottom-0 h-[45%]  left-0 w-full p-2 md:p-4">
-              <figcaption className="w-full h-full rounded-[8px]  backdrop-blur-lg border border-[#ffffff76] p-4 md:p-6">
+              <figcaption className="w-full h-full rounded-[8px] bg-[#2727274d] backdrop-blur-lg border border-[#ffffff76] p-4 md:p-6 text-white">
                 <div className="max-w-[80%] lg:max-w-[70%] h-full flex flex-col gap-4">
                   <p className="font-bold">Featured</p>
                   <h3 className="text-lg md:text-2xl capitalize font-bold line-clamp-2">

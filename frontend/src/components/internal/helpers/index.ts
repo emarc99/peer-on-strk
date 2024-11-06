@@ -25,7 +25,6 @@ export const formatCurrency = (currency: number) => {
 }
 
 
-
 export const formatDate = (isoString: string): string => {
   const options: Intl.DateTimeFormatOptions = {
     day: "numeric",
@@ -72,16 +71,36 @@ export function toHex(value: string) {
     return asciiToHex(value);
   }
 
-export async function getCryptoPrices() {
-  try {
-    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,starknet&vs_currencies=usd');
-    const data = await response.json();
-    return {
-      eth: data.ethereum.usd,
-      strk: data.starknet.usd,
-    };
-  } catch (error) {
-    console.error('Error fetching crypto prices:', error);
-    return { eth: 0, strk: 0 };
+  let cachedPrices: any = null;
+  let lastFetchTime = 0;
+  
+  export async function getCryptoPrices() {
+    const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
+    const now = Date.now();
+  
+    // Check if we have recent cached data (within the last hour)
+    if (cachedPrices && now - lastFetchTime < oneHour) {
+      return cachedPrices;
+    }
+  
+    // If cached data is outdated or doesn't exist, fetch new data
+    try {
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,starknet&vs_currencies=usd');
+      const data = await response.json();
+  
+      // Update the cache with new data and timestamp
+      cachedPrices = {
+        eth: data?.ethereum?.usd ?? 0,
+        strk: data?.starknet?.usd ?? 0,
+      };
+      lastFetchTime = now;
+  
+      return cachedPrices;
+    } catch (error) {
+      console.error('Error fetching crypto prices:', error);
+  
+      // Return cached data if available, or fallback if no cache exists
+      return cachedPrices || { eth: 0, strk: 0 };
+    }
   }
-}
+  
