@@ -37,6 +37,49 @@ export const formatDate = (isoString: string): string => {
   return date.toLocaleDateString("en-US", options);
 }
 
+export const formatDate1 = (timestamp: number): string => {
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: "long",  
+    day: "2-digit",   
+    month: "short",    
+    year: "numeric",     
+    hour: "2-digit",      
+    minute: "2-digit",   
+    hour12: true,        
+    timeZone: "UTC",     
+    timeZoneName: "short" 
+  };
+
+  const date = new Date(
+    timestamp.toString().length === 10 ? timestamp * 1000 : timestamp
+  );
+
+  if (isNaN(date.getTime())) {
+    console.error("Invalid timestamp:", timestamp);
+    return "Invalid Date";
+  }
+
+  return date.toLocaleString("en-US", options);
+};
+
+export const felt252ToHex = (feltValue: any) => {
+  // Check if the input is a valid FELT252 integer
+  const MAX_FELT252_VALUE = BigInt(2 ** 252) - BigInt(1);
+
+  if (typeof feltValue !== "bigint" && typeof feltValue !== "number") {
+    throw new Error("Invalid input type. Expected a BigInt or Number.");
+  }
+
+  const bigIntValue = BigInt(feltValue);
+  
+  if (bigIntValue < 0 || bigIntValue > MAX_FELT252_VALUE) {
+    throw new Error("Input is out of range for FELT252.");
+  }
+
+  // Convert to hexadecimal and return, removing the '0x' prefix
+  return "0x" + bigIntValue.toString(16);
+};
+
 
 function asciiToHex(str: string) {
   if (typeof str !== 'string') {

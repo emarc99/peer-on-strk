@@ -20,7 +20,33 @@
   },
   {
     "type": "struct",
-    "name": "peer_protocol::peer_protocol::PeerProtocol::UserAssets",
+    "name": "peer_protocol::peer_protocol::Transaction",
+    "members": [
+      {
+        "name": "transaction_type",
+        "type": "core::felt252"
+      },
+      {
+        "name": "token",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "amount",
+        "type": "core::integer::u256"
+      },
+      {
+        "name": "timestamp",
+        "type": "core::integer::u64"
+      },
+      {
+        "name": "tx_hash",
+        "type": "core::felt252"
+      }
+    ]
+  },
+  {
+    "type": "struct",
+    "name": "peer_protocol::peer_protocol::UserAssets",
     "members": [
       {
         "name": "token_address",
@@ -46,7 +72,7 @@
   },
   {
     "type": "struct",
-    "name": "peer_protocol::peer_protocol::PeerProtocol::UserDeposit",
+    "name": "peer_protocol::peer_protocol::UserDeposit",
     "members": [
       {
         "name": "token",
@@ -60,11 +86,11 @@
   },
   {
     "type": "struct",
-    "name": "core::array::Span::<peer_protocol::peer_protocol::PeerProtocol::UserDeposit>",
+    "name": "core::array::Span::<peer_protocol::peer_protocol::UserDeposit>",
     "members": [
       {
         "name": "snapshot",
-        "type": "@core::array::Array::<peer_protocol::peer_protocol::PeerProtocol::UserDeposit>"
+        "type": "@core::array::Array::<peer_protocol::peer_protocol::UserDeposit>"
       }
     ]
   },
@@ -118,6 +144,30 @@
       },
       {
         "type": "function",
+        "name": "get_transaction_history",
+        "inputs": [
+          {
+            "name": "user",
+            "type": "core::starknet::contract_address::ContractAddress"
+          },
+          {
+            "name": "offset",
+            "type": "core::integer::u64"
+          },
+          {
+            "name": "limit",
+            "type": "core::integer::u64"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "core::array::Array::<peer_protocol::peer_protocol::Transaction>"
+          }
+        ],
+        "state_mutability": "view"
+      },
+      {
+        "type": "function",
         "name": "get_user_assets",
         "inputs": [
           {
@@ -127,7 +177,7 @@
         ],
         "outputs": [
           {
-            "type": "core::array::Array::<peer_protocol::peer_protocol::PeerProtocol::UserAssets>"
+            "type": "core::array::Array::<peer_protocol::peer_protocol::UserAssets>"
           }
         ],
         "state_mutability": "view"
@@ -143,7 +193,7 @@
         ],
         "outputs": [
           {
-            "type": "core::array::Span::<peer_protocol::peer_protocol::PeerProtocol::UserDeposit>"
+            "type": "core::array::Span::<peer_protocol::peer_protocol::UserDeposit>"
           }
         ],
         "state_mutability": "view"
@@ -217,6 +267,57 @@
     ]
   },
   {
+    "type": "enum",
+    "name": "peer_protocol::peer_protocol::TransactionType",
+    "variants": [
+      {
+        "name": "DEPOSIT",
+        "type": "()"
+      },
+      {
+        "name": "WITHDRAWAL",
+        "type": "()"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "peer_protocol::peer_protocol::PeerProtocol::TransactionRecorded",
+    "kind": "struct",
+    "members": [
+      {
+        "name": "user",
+        "type": "core::starknet::contract_address::ContractAddress",
+        "kind": "data"
+      },
+      {
+        "name": "transaction_type",
+        "type": "peer_protocol::peer_protocol::TransactionType",
+        "kind": "data"
+      },
+      {
+        "name": "token",
+        "type": "core::starknet::contract_address::ContractAddress",
+        "kind": "data"
+      },
+      {
+        "name": "amount",
+        "type": "core::integer::u256",
+        "kind": "data"
+      },
+      {
+        "name": "timestamp",
+        "type": "core::integer::u64",
+        "kind": "data"
+      },
+      {
+        "name": "tx_hash",
+        "type": "core::felt252",
+        "kind": "data"
+      }
+    ]
+  },
+  {
     "type": "event",
     "name": "peer_protocol::peer_protocol::PeerProtocol::Event",
     "kind": "enum",
@@ -234,6 +335,11 @@
       {
         "name": "WithdrawalSuccessful",
         "type": "peer_protocol::peer_protocol::PeerProtocol::WithdrawalSuccessful",
+        "kind": "nested"
+      },
+      {
+        "name": "TransactionRecorded",
+        "type": "peer_protocol::peer_protocol::PeerProtocol::TransactionRecorded",
         "kind": "nested"
       }
     ]

@@ -9,7 +9,7 @@ enum TransactionType {
 
 #[derive(Drop, Serde, Copy, starknet::Store)]
 struct Transaction {
-    transaction_type: TransactionType,
+    transaction_type: felt252,
     token: ContractAddress,
     amount: u256,
     timestamp: u64,
@@ -130,7 +130,7 @@ mod PeerProtocol {
             let timestamp = get_block_timestamp();
             let tx_info = get_tx_info();
             let transaction = Transaction {
-                transaction_type: TransactionType::DEPOSIT,
+                transaction_type: 'DEPOSIT',
                 token: token_address,
                 amount,
                 timestamp,
@@ -185,7 +185,7 @@ mod PeerProtocol {
             let timestamp = get_block_timestamp();
             let tx_info = get_tx_info();
             let transaction = Transaction {
-                transaction_type: TransactionType::WITHDRAWAL,
+                transaction_type: 'WITHDRAWAL',
                 token: token_address,
                 amount,
                 timestamp,
@@ -321,3 +321,4 @@ mod PeerProtocol {
         }
     }
 }
+
