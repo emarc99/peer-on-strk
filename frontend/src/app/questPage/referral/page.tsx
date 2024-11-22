@@ -28,14 +28,14 @@ export default function Referral() {
       <div className='flex flex-col gap-2'>
         <h1 className={`font-[600] xl:text-[3.1rem] lg:text-[2.9rem] md:text-[2.8rem] sm:text-[2rem] xs:text-[1.5rem]  ${isDarkMode ? "  text-white" : "   text-black"}`}>Referral</h1>
 
-        <p className={` xl:max-w-[70%] opacity-60 md:w-[80%] md:text-lg text-[0.6rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>Invite friends and earn 10% of friend’s points</p>
+        <p className={` xl:max-w-[70%] opacity-60 md:w-[80%] md:text-lg text-[1rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>Invite friends and earn 10% of friend’s points</p>
 
       </div>
       <div className='flex flex-col gap-6 pt-[5.2rem]'>
         <div className="bg-[#F5F5F5] rounded-2xl border-2 p-[1rem]">
           <div className="flex justify-between px-2 items-center">
             <p className="text-gray-600">Total participants</p>
-            <h1 className={`md:text-lg font-light text-[0.4rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>
+            <h1 className={`md:text-lg font-light text-[1rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>
               20,465,485 players
             </h1>
           </div>
@@ -54,14 +54,14 @@ export default function Referral() {
                 className="cursor-pointer p-2 bg-[#F5F5F5] rounded-lg "
               />
               <div className='flex flex-col gap-1'>
-                <p className={`md:text-lg  text-[0.4rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>Duchekelvin</p>
-                <h1 className={`md:text-sm font-light text-[0.3rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>
+                <p className={`md:text-lg  text-[1rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>Duchekelvin</p>
+                <h1 className={`md:text-sm font-light text-[1rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>
                   #20,035
                 </h1>
               </div>
 
             </div>
-            <h1 className={`md:text-lg font-light text-[0.4rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>
+            <h1 className={`md:text-lg font-light text-[1rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>
               2,564,466 xps
             </h1>
           </div>
@@ -79,7 +79,7 @@ export default function Referral() {
                   className="cursor-pointer p-2 bg-white  rounded-lg "
                 />
                 <div className='flex flex-col gap-1'>
-                <p className={`md:text-lg  text-[0.4rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>Duchekelvin</p>
+                <p className={`md:text-lg  text-[1rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>Duchekelvin</p>
                 <Image
                   src="/images/questGold.svg"
                   height={20}
@@ -91,7 +91,7 @@ export default function Referral() {
                 </div>
 
               </div>
-              <h1 className={`md:text-lg font-light text-[0.4rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>
+              <h1 className={`md:text-lg font-light text-[1rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>
                 2,564,466 xps
               </h1>
             </div>
@@ -108,7 +108,7 @@ export default function Referral() {
                   className="cursor-pointer p-2 bg-white  rounded-lg "
                 />
                 <div className='flex flex-col gap-1'>
-                <p className={`md:text-lg  text-[0.4rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>Duchekelvin</p>
+                <p className={`md:text-lg  text-[1rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>Duchekelvin</p>
                 <Image
                   src="/images/questsilver.svg"
                   height={20}
@@ -120,7 +120,7 @@ export default function Referral() {
                 </div>
 
               </div>
-              <h1 className={`md:text-lg font-light text-[0.4rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>
+              <h1 className={`md:text-lg font-light text-[1rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>
                 2,564,466 xps
               </h1>
             </div>
@@ -137,7 +137,7 @@ export default function Referral() {
                   className="cursor-pointer p-2 bg-white  rounded-lg "
                 />
                 <div className='flex flex-col gap-1'>
-                <p className={`md:text-lg  text-[0.4rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>Duchekelvin</p>
+                <p className={`md:text-lg  text-[1rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>Duchekelvin</p>
                 <Image
                   src="/images/questBronze.svg"
                   height={20}
@@ -149,7 +149,7 @@ export default function Referral() {
                 </div>
 
               </div>
-              <h1 className={`md:text-lg font-light text-[0.4rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>
+              <h1 className={`md:text-lg font-light text-[1rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>
                 2,564,466 xps
               </h1>
             </div>
@@ -166,14 +166,14 @@ export default function Referral() {
                   className="cursor-pointer p-2 bg-white  rounded-lg "
                 />
                 <div className='flex flex-col gap-1'>
-                <p className={`md:text-lg  text-[0.4rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>Duchekelvin</p>
-                <p className={`md:text-lg  text-[0.4rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>#4</p>
+                <p className={`md:text-lg  text-[1rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>Duchekelvin</p>
+                <p className={`md:text-lg  text-[1rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>#4</p>
                
 
                 </div>
 
               </div>
-              <h1 className={`md:text-lg font-light text-[0.4rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>
+              <h1 className={`md:text-lg font-light text-[1rem] ${isDarkMode ? "  text-white" : "   text-black"}`}>
                 2,564,466 xps
               </h1>
             </div>

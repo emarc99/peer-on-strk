@@ -22,7 +22,7 @@ export default function QuestRootLayout({
         <div className={`flex-1 flex flex-col h-full max-h-screen overflow-auto ${isWelcomePage ? 'w-full' : ''}`}>
         {!isWelcomePage && <NavMain/>}
           {isWelcomePage && <Nav/>}
-          <main className={`flex-1 px-6 ${isWelcomePage ? 'w-full' : ''}`}>
+          <main className={`flex-1 px-3 md:px-6 ${isWelcomePage ? 'w-full' : ''}`}>
             {children}
           </main>
         </div>

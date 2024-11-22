@@ -39,7 +39,7 @@ const Nav = () => {
       </div>
 
 
-      <div className="relative">
+      <div className="relative hidden md:block">
             {address ? (
               <div className="flex items-center gap-4">
                 <AddressBar />
