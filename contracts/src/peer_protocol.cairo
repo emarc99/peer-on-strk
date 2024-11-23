@@ -59,6 +59,7 @@ mod PeerProtocol {
     use super::{Transaction, TransactionType, UserDeposit, UserAssets, Proposal, ProposalType};
     use peer_protocol::interfaces::ipeer_protocol::IPeerProtocol;
     use peer_protocol::interfaces::ierc20::{IERC20Dispatcher, IERC20DispatcherTrait};
+    use peer_protocol::interfaces::ierc721::{IERC721Dispatcher, IERC721DispatcherTrait};
     use starknet::{
         ContractAddress, get_block_timestamp, get_caller_address, get_contract_address,
         contract_address_const, get_tx_info
@@ -88,6 +89,8 @@ mod PeerProtocol {
         proposals: Map<u256, Proposal>, // Mapping from proposal ID to proposal details
         proposals_count: u256,            // Counter for proposal IDs
         protocol_fee_address: ContractAddress,
+        spok_nft: ContractAddress,
+        next_spok_id: u256,
     }
 
     const MAX_U64: u64 = 18446744073709551615_u64;
@@ -472,6 +475,19 @@ mod PeerProtocol {
             updated_proposal.accepted_at = get_block_timestamp();
             updated_proposal.repayment_date = updated_proposal.accepted_at + proposal.duration;
             self.proposals.entry(proposal.id).write(updated_proposal);
+        }
+
+        fn mint_spok(ref self: ContractState, creator: ContractAddress, acceptor: ContractAddress) {
+            let spok = IERC721Dispatcher { contract_address: self.spok_nft.read() };
+
+            // Mint NFTs for both parties
+            let creator_token_id = self.next_spok_id.read();
+            let acceptor_token_id = creator_token_id + 1;
+
+            spok.mint(creator, creator_token_id);
+            spok.mint(acceptor, acceptor_token_id);
+
+            self.next_spok_id.write(acceptor_token_id + 1);
         }
     }
 }
