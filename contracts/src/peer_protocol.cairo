@@ -164,9 +164,11 @@ mod PeerProtocol {
 
 
     #[constructor]
-    fn constructor(ref self: ContractState, owner: ContractAddress) {
+    fn constructor(ref self: ContractState, owner: ContractAddress, protocol_fee_address: ContractAddress, spok_nft: ContractAddress) {
         assert!(owner != self.zero_address(), "zero address detected");
         self.owner.write(owner);
+        self.protocol_fee_address.write(protocol_fee_address);
+        self.spok_nft.write(spok_nft);
     }
 
     #[abi(embed_v0)]
@@ -236,6 +238,7 @@ mod PeerProtocol {
         ) {
         
             assert!(self.supported_tokens.entry(token).read(), "Token not supported");
+            assert!(self.supported_tokens.entry(accepted_collateral_token).read(), "Collateral token not supported");
             assert!(amount > 0, "Borrow amount must be greater than zero");
             assert!(interest_rate > 0 && interest_rate <= 7, "Interest rate out of bounds");
             assert!(duration >= 7 && duration <= 15, "Duration out of bounds");
