@@ -46,13 +46,14 @@ struct Proposal {
     interest_rate: u64,
     duration: u64,
     created_at: u64,
-    is_accepted: bool,
+    is_accepted: bool
 }
 
 
 #[starknet::contract]
 mod PeerProtocol {
-    use super::{Transaction, TransactionType, UserDeposit, UserAssets, Proposal, ProposalType};
+    use starknet::event::EventEmitter;
+use super::{Transaction, TransactionType, UserDeposit, UserAssets, Proposal, ProposalType};
     use peer_protocol::interfaces::ipeer_protocol::IPeerProtocol;
     use peer_protocol::interfaces::ierc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use starknet::{
@@ -81,8 +82,8 @@ mod PeerProtocol {
         lent_assets: Map<(ContractAddress, ContractAddress), u256>,
         // Mapping: (user, token) => interest earned
         interests_earned: Map<(ContractAddress, ContractAddress), u256>,
-        borrow_proposals: Map<u64, Proposal>, // Mapping from proposal ID to proposal details
-        borrow_proposals_count: u64,               // Counter for proposal IDs
+        proposals: Map<u256, Proposal>, // Mapping from proposal ID to proposal details
+        proposals_count: u256,               // Counter for proposal IDs
     }
 
     const MAX_U64: u64 = 18446744073709551615_u64;
@@ -94,7 +95,8 @@ mod PeerProtocol {
         SupportedTokenAdded: SupportedTokenAdded,
         WithdrawalSuccessful: WithdrawalSuccessful,
         TransactionRecorded: TransactionRecorded,
-        BorrowProposalCreated:BorrowProposalCreated,       
+        ProposalCreated: ProposalCreated,
+        ProposalAccepted: ProposalAccepted
     }
 
     #[derive(Drop, starknet::Event)]
@@ -127,13 +129,22 @@ mod PeerProtocol {
     }
 
     #[derive(Drop, starknet::Event)]
-    pub struct BorrowProposalCreated {
+    pub struct ProposalCreated {
+        pub proposal_type: ProposalType,
         pub borrower: ContractAddress,
         pub token: ContractAddress,
         pub amount: u256,
         pub interest_rate: u64,
         pub duration: u64,
         pub created_at: u64,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    pub struct ProposalAccepted {
+        pub proposal_type: ProposalType,
+        pub accepted_by: ContractAddress,
+        pub token: ContractAddress,
+        pub amount: u256
     }
 
 
@@ -271,12 +282,13 @@ mod PeerProtocol {
             };
         
             // Store the proposal
-            let proposal_id = self.borrow_proposals_count.read() + 1;
-            self.borrow_proposals.entry(proposal_id).write(proposal);
-            self.borrow_proposals_count.write(proposal_id);
+            let proposal_id = self.proposals_count.read() + 1;
+            self.proposals.entry(proposal_id).write(proposal);
+            self.proposals_count.write(proposal_id);
         
             self.emit(
-                BorrowProposalCreated {
+                ProposalCreated {
+                    proposal_type: ProposalType::BORROW,
                     borrower: caller,
                     token,
                     amount,
@@ -388,7 +400,26 @@ mod PeerProtocol {
         }
 
         fn accept_proposal(ref self: ContractState, proposal_id: u256) {
-            
+            let caller = get_caller_address();
+            let proposal = self.proposals.entry(proposal_id).read();
+
+            match proposal.proposal_type {
+                ProposalType::BORROW => {
+                    self.proposals.entry(proposal_id).lender.write(caller);
+                },
+                ProposalType::LENDING => {
+                    self.proposals.entry(proposal_id).borrower.write(caller);
+                }
+            }
+
+            self.proposals.entry(proposal_id).is_accepted.write(true);
+
+            self.emit(ProposalAccepted {
+                proposal_type: proposal.proposal_type,
+                accepted_by: caller,
+                token: proposal.token,
+                amount: proposal.amount
+            });
         }
     }
 
