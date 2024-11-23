@@ -14,7 +14,7 @@ interface Quest {
 }
 
 export default function QuestsPage() {
-    const { isDarkMode, toggleDark } = useContext(DarkModeContext);
+    const { isDarkMode } = useContext(DarkModeContext);
 
 
     const [isOpen, setIsOpen] = useState<Boolean>(false);
