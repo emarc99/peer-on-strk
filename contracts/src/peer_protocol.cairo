@@ -8,6 +8,12 @@ enum TransactionType {
 }
 
 #[derive(Drop, Serde, Copy, starknet::Store)]
+enum ProposalType {
+    BORROW,
+    LENDING
+}
+
+#[derive(Drop, Serde, Copy, starknet::Store)]
 struct Transaction {
     transaction_type: felt252,
     token: ContractAddress,
@@ -31,19 +37,22 @@ struct UserAssets {
     available_balance: u256,
 }
 #[derive(Drop, Serde, Copy, starknet::Store)]
-struct BorrowProposal {
+struct Proposal {
+    lender: ContractAddress,
     borrower: ContractAddress,
+    proposal_type: ProposalType,
     token: ContractAddress,
     amount: u256,
     interest_rate: u64,
     duration: u64,
     created_at: u64,
+    is_accepted: bool,
 }
 
 
 #[starknet::contract]
 mod PeerProtocol {
-    use super::{Transaction, TransactionType, UserDeposit, UserAssets, BorrowProposal};
+    use super::{Transaction, TransactionType, UserDeposit, UserAssets, Proposal, ProposalType};
     use peer_protocol::interfaces::ipeer_protocol::IPeerProtocol;
     use peer_protocol::interfaces::ierc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use starknet::{
@@ -72,7 +81,7 @@ mod PeerProtocol {
         lent_assets: Map<(ContractAddress, ContractAddress), u256>,
         // Mapping: (user, token) => interest earned
         interests_earned: Map<(ContractAddress, ContractAddress), u256>,
-        borrow_proposals: Map<u64, BorrowProposal>, // Mapping from proposal ID to proposal details
+        borrow_proposals: Map<u64, Proposal>, // Mapping from proposal ID to proposal details
         borrow_proposals_count: u64,               // Counter for proposal IDs
     }
 
@@ -130,7 +139,7 @@ mod PeerProtocol {
 
     #[constructor]
     fn constructor(ref self: ContractState, owner: ContractAddress) {
-        assert!(owner != contract_address_const::<0>(), "zero address detected");
+        assert!(owner != self.zero_address(), "zero address detected");
         self.owner.write(owner);
     }
 
@@ -249,19 +258,22 @@ mod PeerProtocol {
             let created_at = get_block_timestamp();
         
             // Create a new proposal
-            let proposal = BorrowProposal {
+            let proposal = Proposal {
+                lender: self.zero_address(),
                 borrower: caller,
+                proposal_type: ProposalType::BORROW,
                 token,
                 amount,
                 interest_rate,
                 duration,
                 created_at,
+                is_accepted: false
             };
         
             // Store the proposal
-            let proposal_id = self.borrow_proposals_count.read();
+            let proposal_id = self.borrow_proposals_count.read() + 1;
             self.borrow_proposals.entry(proposal_id).write(proposal);
-            self.borrow_proposals_count.write(proposal_id + 1);
+            self.borrow_proposals_count.write(proposal_id);
         
             self.emit(
                 BorrowProposalCreated {
@@ -359,7 +371,7 @@ mod PeerProtocol {
         /// - Includes token address and amount for each active deposit
 
         fn get_user_deposits(self: @ContractState, user: ContractAddress) -> Span<UserDeposit> {
-            assert!(user != contract_address_const::<0>(), "invalid user address");
+            assert!(user != self.zero_address(), "invalid user address");
 
             let mut user_deposits = array![];
             for i in 0
@@ -389,6 +401,10 @@ mod PeerProtocol {
             assert!(current_count < MAX_U64, "Transaction count overflow");
             self.user_transactions.entry((user, current_count)).write(transaction);
             self.user_transactions_count.entry(user).write(current_count + 1);
+        }
+
+        fn zero_address(self: @ContractState) -> ContractAddress {
+            contract_address_const::<0>()
         }
     }
 }
