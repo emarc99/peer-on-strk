@@ -7,7 +7,7 @@ enum TransactionType {
     WITHDRAWAL
 }
 
-#[derive(Drop, Serde, Copy, starknet::Store)]
+#[derive(Drop, Serde, Copy, PartialEq, starknet::Store)]
 enum ProposalType {
     BORROW,
     LENDING
@@ -402,6 +402,14 @@ use super::{Transaction, TransactionType, UserDeposit, UserAssets, Proposal, Pro
         fn accept_proposal(ref self: ContractState, proposal_id: u256) {
             let caller = get_caller_address();
             let proposal = self.proposals.entry(proposal_id).read();
+
+            if proposal.proposal_type == ProposalType::BORROW {
+                assert(caller != proposal.borrower, 'borrower not allowed');
+            }
+
+            if proposal.proposal_type == ProposalType::LENDING {
+                assert(caller != proposal.lender, 'lender not allowed');
+            }
 
             match proposal.proposal_type {
                 ProposalType::BORROW => {
