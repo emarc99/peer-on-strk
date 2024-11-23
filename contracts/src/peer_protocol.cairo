@@ -116,15 +116,16 @@ mod PeerProtocol {
         pub timestamp: u64,
         pub tx_hash: felt252,
     }
+
     #[derive(Drop, starknet::Event)]
-pub struct BorrowProposalCreated {
-    pub borrower: ContractAddress,
-    pub token: ContractAddress,
-    pub amount: u256,
-    pub interest_rate: u64,
-    pub duration: u64,
-    pub created_at: u64,
-}
+    pub struct BorrowProposalCreated {
+        pub borrower: ContractAddress,
+        pub token: ContractAddress,
+        pub amount: u256,
+        pub interest_rate: u64,
+        pub duration: u64,
+        pub created_at: u64,
+    }
 
 
     #[constructor]
@@ -237,13 +238,13 @@ pub struct BorrowProposalCreated {
             interest_rate: u64,
             duration: u64,
         ) {
-         
+        
             assert!(self.supported_tokens.entry(token).read(), "Token not supported");
             assert!(amount > 0, "Borrow amount must be greater than zero");
             assert!(interest_rate > 0 && interest_rate <= 7, "Interest rate out of bounds");
             assert!(duration >= 7 && duration <= 15, "Duration out of bounds");
         
-         
+        
             let caller = get_caller_address();
             let created_at = get_block_timestamp();
         
