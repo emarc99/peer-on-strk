@@ -16,8 +16,8 @@ const ReferralBoards = () => {
                 <div className="w-full md:flex-1 flex flex-col right">
                     <Nav />
 
-                    <div className="grid grid-cols-1 gap-6 px-10 ">
-                        <div className="flex flex-col">
+                    <div className="grid grid-cols-1 gap-4 px-10 ">
+                        <div className="flex flex-col mb-14">
                             <h1 className=" text-[50px] font-semibold">Referral</h1>
                             <span className=" text-[25px] font-normal text-[#000000]">Invite friends and earn 10% of friend’s points</span>
                         </div>
