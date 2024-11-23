@@ -166,7 +166,7 @@ fn test_get_user_assets() {
 
     let token1 = IERC20Dispatcher { contract_address: token1_address };
     let token2 = IERC20Dispatcher { contract_address: token2_address };
-    
+
     let caller: ContractAddress = starknet::contract_address_const::<0x122226789>();
     let mint_amount: u256 = 10000 * ONE_E18;
 
@@ -202,10 +202,14 @@ fn test_get_user_assets() {
 
     let user_assets = peer_protocol.get_user_assets(caller);
 
-    assert!(*user_assets.at(0).available_balance == deposit_amount1, "wrong asset available_balance 1");
+    assert!(
+        *user_assets.at(0).available_balance == deposit_amount1, "wrong asset available_balance 1"
+    );
     assert!(*user_assets.at(0).token_address == token1_address, "wrong asset token1");
 
-    assert!(*user_assets.at(1).available_balance == deposit_amount2, "wrong asset available_balance 2");
+    assert!(
+        *user_assets.at(1).available_balance == deposit_amount2, "wrong asset available_balance 2"
+    );
     assert!(*user_assets.at(1).token_address == token2_address, "wrong asset token2");
 
     stop_cheat_caller_address(peer_protocol_address);
@@ -297,3 +301,96 @@ fn test_get_user_deposits_with_zero_address() {
     let zero_address: ContractAddress = starknet::contract_address_const::<0>();
     peer_protocol.get_user_deposits(zero_address);
 }
+
+#[test]
+fn test_create_borrow_proposal() {
+    let token_address = deploy_token("MockToken");
+    let peer_protocol_address = deploy_peer_protocol();
+
+    let token = IERC20Dispatcher { contract_address: token_address };
+    let peer_protocol = IPeerProtocolDispatcher { contract_address: peer_protocol_address };
+
+    let owner: ContractAddress = starknet::contract_address_const::<0x123626789>();
+    let borrower: ContractAddress = starknet::contract_address_const::<0x122226789>();
+
+    let mint_amount: u256 = 1000 * ONE_E18;
+    let borrow_amount: u256 = 500 * ONE_E18;
+    let interest_rate: u64 = 5;
+    let duration: u64 = 10;
+
+    // Add supported token
+    start_cheat_caller_address(peer_protocol_address, owner);
+    peer_protocol.add_supported_token(token_address);
+    stop_cheat_caller_address(peer_protocol_address);
+
+    token.mint(borrower, mint_amount);
+
+    start_cheat_caller_address(token_address, borrower);
+    token.approve(peer_protocol_address, mint_amount);
+    stop_cheat_caller_address(token_address);
+
+    // Borrower creates a borrow proposal
+    start_cheat_caller_address(peer_protocol_address, borrower);
+    let mut spy = spy_events();
+
+    peer_protocol.create_borrow_proposal(token_address, borrow_amount, interest_rate, duration);
+
+    // Check emitted event
+    let created_at = starknet::get_block_timestamp();
+    let expected_event = PeerProtocol::Event::BorrowProposalCreated(
+        PeerProtocol::BorrowProposalCreated {
+            borrower,
+            token: token_address,
+            amount: borrow_amount,
+            interest_rate,
+            duration,
+            created_at,
+        }
+    );
+
+    spy.assert_emitted(@array![(peer_protocol_address, expected_event)]);
+
+    stop_cheat_caller_address(peer_protocol_address);
+}
+
+#[test]
+#[should_panic(expected: "Token not supported")]
+fn test_create_borrow_proposal_should_panic_for_unsupported_token() {
+    let token_address = deploy_token("MockToken");
+    let peer_protocol_address = deploy_peer_protocol();
+
+    let token = IERC20Dispatcher { contract_address: token_address };
+    let peer_protocol = IPeerProtocolDispatcher { contract_address: peer_protocol_address };
+
+    let owner: ContractAddress = starknet::contract_address_const::<0x123626789>();
+    let borrower: ContractAddress = starknet::contract_address_const::<0x122226789>();
+
+    let mint_amount: u256 = 1000 * ONE_E18;
+    let borrow_amount: u256 = 500 * ONE_E18;
+    let interest_rate: u64 = 5;
+    let duration: u64 = 10;
+
+    start_cheat_caller_address(peer_protocol_address, owner);
+    peer_protocol.add_supported_token(token_address);
+    stop_cheat_caller_address(peer_protocol_address);
+
+    token.mint(borrower, mint_amount);
+
+    // Approve the peer_protocol contract to spend tokens
+    start_cheat_caller_address(token_address, borrower);
+    token.approve(peer_protocol_address, mint_amount);
+    stop_cheat_caller_address(token_address);
+
+    // Simulate using an unsupported token address
+    let unsupported_token_address: ContractAddress = starknet::contract_address_const::<
+        0x0
+    >(); // Invalid token address
+
+    start_cheat_caller_address(peer_protocol_address, borrower);
+
+    peer_protocol
+        .create_borrow_proposal(unsupported_token_address, borrow_amount, interest_rate, duration);
+
+    stop_cheat_caller_address(peer_protocol_address);
+}
+
