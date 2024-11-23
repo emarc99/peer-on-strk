@@ -38,6 +38,7 @@ struct UserAssets {
 }
 #[derive(Drop, Serde, Copy, starknet::Store)]
 struct Proposal {
+    id: u256,
     lender: ContractAddress,
     borrower: ContractAddress,
     proposal_type: ProposalType,
@@ -46,14 +47,16 @@ struct Proposal {
     interest_rate: u64,
     duration: u64,
     created_at: u64,
-    is_accepted: bool
+    is_accepted: bool,
+    accepted_at: u64,
+    repayment_date: u64
 }
 
 
 #[starknet::contract]
 mod PeerProtocol {
     use starknet::event::EventEmitter;
-use super::{Transaction, TransactionType, UserDeposit, UserAssets, Proposal, ProposalType};
+    use super::{Transaction, TransactionType, UserDeposit, UserAssets, Proposal, ProposalType};
     use peer_protocol::interfaces::ipeer_protocol::IPeerProtocol;
     use peer_protocol::interfaces::ierc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use starknet::{
@@ -83,10 +86,12 @@ use super::{Transaction, TransactionType, UserDeposit, UserAssets, Proposal, Pro
         // Mapping: (user, token) => interest earned
         interests_earned: Map<(ContractAddress, ContractAddress), u256>,
         proposals: Map<u256, Proposal>, // Mapping from proposal ID to proposal details
-        proposals_count: u256,               // Counter for proposal IDs
+        proposals_count: u256,            // Counter for proposal IDs
+        protocol_fee_address: ContractAddress,
     }
 
     const MAX_U64: u64 = 18446744073709551615_u64;
+    const PROTOCOL_FEE_PERCENTAGE: u256 = 1;
 
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -267,9 +272,12 @@ use super::{Transaction, TransactionType, UserDeposit, UserAssets, Proposal, Pro
         
             let caller = get_caller_address();
             let created_at = get_block_timestamp();
+
+            let proposal_id = self.proposals_count.read() + 1;
         
             // Create a new proposal
             let proposal = Proposal {
+                id: proposal_id,
                 lender: self.zero_address(),
                 borrower: caller,
                 proposal_type: ProposalType::BORROW,
@@ -278,11 +286,12 @@ use super::{Transaction, TransactionType, UserDeposit, UserAssets, Proposal, Pro
                 interest_rate,
                 duration,
                 created_at,
-                is_accepted: false
+                is_accepted: false,
+                accepted_at: 0,
+                repayment_date: 0
             };
         
             // Store the proposal
-            let proposal_id = self.proposals_count.read() + 1;
             self.proposals.entry(proposal_id).write(proposal);
             self.proposals_count.write(proposal_id);
         
@@ -403,10 +412,14 @@ use super::{Transaction, TransactionType, UserDeposit, UserAssets, Proposal, Pro
             let caller = get_caller_address();
             let proposal = self.proposals.entry(proposal_id).read();
 
+            // Calculate protocol fee
+            let fee_amount = (proposal.amount * PROTOCOL_FEE_PERCENTAGE) / 100;
+            let net_amount = proposal.amount - fee_amount;
+
             match proposal.proposal_type {
                 ProposalType::BORROW => {
                     assert(caller != proposal.borrower, 'borrower not allowed');
-                    self.proposals.entry(proposal_id).lender.write(caller);
+                    self.handle_borrower_acceptance(proposal, caller, net_amount, fee_amount);
                 },
                 ProposalType::LENDING => {
                     assert(caller != proposal.lender, 'lender not allowed');
@@ -438,6 +451,27 @@ use super::{Transaction, TransactionType, UserDeposit, UserAssets, Proposal, Pro
 
         fn zero_address(self: @ContractState) -> ContractAddress {
             contract_address_const::<0>()
+        }
+
+        fn handle_borrower_acceptance(ref self: ContractState, proposal: Proposal, lender: ContractAddress, net_amount: u256, fee_amount: u256) {
+            // Check if acceptor (lender) has sufficient funds
+            let lender_balance = self.token_deposits.entry((lender, proposal.token)).read();
+            assert(lender_balance >= proposal.amount, 'insufficient lender balance');
+
+            // Transfer net amount to borrower
+            IERC20Dispatcher { contract_address: proposal.token }.transfer(proposal.borrower, net_amount);
+
+            // Transfer protocol fee
+            IERC20Dispatcher { contract_address: proposal.token }.transfer(self.protocol_fee_address.read(), fee_amount);
+
+            // Update Proposal
+            let mut updated_proposal = proposal;
+
+            updated_proposal.lender = lender;
+            updated_proposal.is_accepted = true;
+            updated_proposal.accepted_at = get_block_timestamp();
+            updated_proposal.repayment_date = updated_proposal.accepted_at + proposal.duration;
+            self.proposals.entry(proposal.id).write(updated_proposal);
         }
     }
 }
