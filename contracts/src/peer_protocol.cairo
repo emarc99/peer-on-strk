@@ -4,18 +4,20 @@ use starknet::{ContractAddress, get_block_timestamp};
 #[derive(Drop, Serde, Copy, starknet::Store)]
 enum TransactionType {
     DEPOSIT,
-    WITHDRAWAL
+    WITHDRAWAL,
+    LEND,
+    BORROW
 }
 
 #[derive(Drop, Serde, Copy, PartialEq, starknet::Store)]
 enum ProposalType {
-    BORROW,
+    BORROWING,
     LENDING
 }
 
 #[derive(Drop, Serde, Copy, starknet::Store)]
 struct Transaction {
-    transaction_type: felt252,
+    transaction_type: TransactionType,
     token: ContractAddress,
     amount: u256,
     timestamp: u64,
@@ -49,7 +51,8 @@ struct Proposal {
     created_at: u64,
     is_accepted: bool,
     accepted_at: u64,
-    repayment_date: u64
+    repayment_date: u64,
+    is_repaid: bool
 }
 
 
@@ -182,7 +185,7 @@ mod PeerProtocol {
             let timestamp = get_block_timestamp();
             let tx_info = get_tx_info();
             let transaction = Transaction {
-                transaction_type: 'DEPOSIT',
+                transaction_type: TransactionType::DEPOSIT,
                 token: token_address,
                 amount,
                 timestamp,
@@ -237,7 +240,7 @@ mod PeerProtocol {
             let timestamp = get_block_timestamp();
             let tx_info = get_tx_info();
             let transaction = Transaction {
-                transaction_type: 'WITHDRAWAL',
+                transaction_type: TransactionType::WITHDRAWAL,
                 token: token_address,
                 amount,
                 timestamp,
@@ -283,7 +286,7 @@ mod PeerProtocol {
                 id: proposal_id,
                 lender: self.zero_address(),
                 borrower: caller,
-                proposal_type: ProposalType::BORROW,
+                proposal_type: ProposalType::BORROWING,
                 token,
                 amount,
                 interest_rate,
@@ -291,7 +294,8 @@ mod PeerProtocol {
                 created_at,
                 is_accepted: false,
                 accepted_at: 0,
-                repayment_date: 0
+                repayment_date: 0,
+                is_repaid: false
             };
         
             // Store the proposal
@@ -300,7 +304,7 @@ mod PeerProtocol {
         
             self.emit(
                 ProposalCreated {
-                    proposal_type: ProposalType::BORROW,
+                    proposal_type: ProposalType::BORROWING,
                     borrower: caller,
                     token,
                     amount,
@@ -420,7 +424,7 @@ mod PeerProtocol {
             let net_amount = proposal.amount - fee_amount;
 
             match proposal.proposal_type {
-                ProposalType::BORROW => {
+                ProposalType::BORROWING => {
                     assert(caller != proposal.borrower, 'borrower not allowed');
                     self.handle_borrower_acceptance(proposal, caller, net_amount, fee_amount);
                 },
@@ -477,7 +481,7 @@ mod PeerProtocol {
             self.proposals.entry(proposal.id).write(updated_proposal);
         }
 
-        fn mint_spok(ref self: ContractState, creator: ContractAddress, acceptor: ContractAddress) {
+        fn mint_spoks(ref self: ContractState, creator: ContractAddress, acceptor: ContractAddress) {
             let spok = IERC721Dispatcher { contract_address: self.spok_nft.read() };
 
             // Mint NFTs for both parties
@@ -488,6 +492,20 @@ mod PeerProtocol {
             spok.mint(acceptor, acceptor_token_id);
 
             self.next_spok_id.write(acceptor_token_id + 1);
+        }
+
+        fn record_transaction(ref self: ContractState, token_address: ContractAddress, transaction_type: TransactionType, amount: u256, caller: ContractAddress) {
+            // Record transaction
+            let timestamp = get_block_timestamp();
+            let tx_info = get_tx_info();
+            let transaction = Transaction {
+                transaction_type: transaction_type,
+                token: token_address,
+                amount,
+                timestamp,
+                tx_hash: tx_info.transaction_hash,
+            };
+            self._add_transaction(caller, transaction);
         }
     }
 }
