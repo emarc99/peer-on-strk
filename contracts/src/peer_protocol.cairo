@@ -30,10 +30,20 @@ struct UserAssets {
     interest_earned: u256,
     available_balance: u256,
 }
+#[derive(Drop, Serde, Copy, starknet::Store)]
+struct BorrowProposal {
+    borrower: ContractAddress,
+    token: ContractAddress,
+    amount: u256,
+    interest_rate: u64,
+    duration: u64,
+    created_at: u64,
+}
+
 
 #[starknet::contract]
 mod PeerProtocol {
-    use super::{Transaction, TransactionType, UserDeposit, UserAssets};
+    use super::{Transaction, TransactionType, UserDeposit, UserAssets, BorrowProposal};
     use peer_protocol::interfaces::ipeer_protocol::IPeerProtocol;
     use peer_protocol::interfaces::ierc20::{IERC20Dispatcher, IERC20DispatcherTrait};
     use starknet::{
@@ -62,6 +72,8 @@ mod PeerProtocol {
         lent_assets: Map<(ContractAddress, ContractAddress), u256>,
         // Mapping: (user, token) => interest earned
         interests_earned: Map<(ContractAddress, ContractAddress), u256>,
+        borrow_proposals: Map<u64, BorrowProposal>, // Mapping from proposal ID to proposal details
+        borrow_proposals_count: u64,               // Counter for proposal IDs
     }
 
     const MAX_U64: u64 = 18446744073709551615_u64;
@@ -73,6 +85,7 @@ mod PeerProtocol {
         SupportedTokenAdded: SupportedTokenAdded,
         WithdrawalSuccessful: WithdrawalSuccessful,
         TransactionRecorded: TransactionRecorded,
+        BorrowProposalCreated:BorrowProposalCreated,       
     }
 
     #[derive(Drop, starknet::Event)]
@@ -103,6 +116,16 @@ mod PeerProtocol {
         pub timestamp: u64,
         pub tx_hash: felt252,
     }
+    #[derive(Drop, starknet::Event)]
+pub struct BorrowProposalCreated {
+    pub borrower: ContractAddress,
+    pub token: ContractAddress,
+    pub amount: u256,
+    pub interest_rate: u64,
+    pub duration: u64,
+    pub created_at: u64,
+}
+
 
     #[constructor]
     fn constructor(ref self: ContractState, owner: ContractAddress) {
@@ -192,7 +215,6 @@ mod PeerProtocol {
                 tx_hash: tx_info.transaction_hash,
             };
             self._add_transaction(caller, transaction);
-
             self
                 .emit(
                     TransactionRecorded {
@@ -207,6 +229,50 @@ mod PeerProtocol {
 
             self.emit(WithdrawalSuccessful { user: caller, token: token_address, amount: amount, });
         }
+
+        fn create_borrow_proposal(
+            ref self: ContractState,
+            token: ContractAddress,
+            amount: u256,
+            interest_rate: u64,
+            duration: u64,
+        ) {
+         
+            assert!(self.supported_tokens.entry(token).read(), "Token not supported");
+            assert!(amount > 0, "Borrow amount must be greater than zero");
+            assert!(interest_rate > 0 && interest_rate <= 7, "Interest rate out of bounds");
+            assert!(duration >= 7 && duration <= 15, "Duration out of bounds");
+        
+         
+            let caller = get_caller_address();
+            let created_at = get_block_timestamp();
+        
+            // Create a new proposal
+            let proposal = BorrowProposal {
+                borrower: caller,
+                token,
+                amount,
+                interest_rate,
+                duration,
+                created_at,
+            };
+        
+            // Store the proposal
+            let proposal_id = self.borrow_proposals_count.read();
+            self.borrow_proposals.entry(proposal_id).write(proposal);
+            self.borrow_proposals_count.write(proposal_id + 1);
+        
+            self.emit(
+                BorrowProposalCreated {
+                    borrower: caller,
+                    token,
+                    amount,
+                    interest_rate,
+                    duration,
+                    created_at,
+                },
+            );
+        }        
 
         fn get_transaction_history(
             self: @ContractState, user: ContractAddress, offset: u64, limit: u64
