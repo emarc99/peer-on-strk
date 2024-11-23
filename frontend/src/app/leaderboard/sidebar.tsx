@@ -76,7 +76,7 @@ const Sidebar = ({ isVisible, toggleSidebar }: { isVisible: boolean; toggleSideb
             onClick={() => handleLinkClick("Swap")}
           >
             <Image
-              src="/images/drop-of-liquid.png"
+              src="/images/swapicon.png"
               width={20}
               height={20}
               alt="Liquidity"
