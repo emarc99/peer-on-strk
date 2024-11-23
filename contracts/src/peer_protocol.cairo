@@ -45,6 +45,8 @@ struct Proposal {
     borrower: ContractAddress,
     proposal_type: ProposalType,
     token: ContractAddress,
+    accepted_collateral_token: ContractAddress,
+    required_collateral_value: u256,
     amount: u256,
     interest_rate: u64,
     duration: u64,
@@ -94,10 +96,12 @@ mod PeerProtocol {
         protocol_fee_address: ContractAddress,
         spok_nft: ContractAddress,
         next_spok_id: u256,
+        locked_collateral: Map<(ContractAddress, ContractAddress), u256>, // (user, token) => amount
     }
 
     const MAX_U64: u64 = 18446744073709551615_u64;
-    const PROTOCOL_FEE_PERCENTAGE: u256 = 1;
+    const COLLATERAL_RATIO: u256 = 13_u256 / 10_u256;  // 1.3
+    const PROTOCOL_FEE_PERCENTAGE: u256 = 1_u256;  // 1%
 
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -224,7 +228,9 @@ mod PeerProtocol {
         fn create_borrow_proposal(
             ref self: ContractState,
             token: ContractAddress,
+            accepted_collateral_token: ContractAddress,
             amount: u256,
+            required_collateral_value: u256,
             interest_rate: u64,
             duration: u64,
         ) {
@@ -233,10 +239,16 @@ mod PeerProtocol {
             assert!(amount > 0, "Borrow amount must be greater than zero");
             assert!(interest_rate > 0 && interest_rate <= 7, "Interest rate out of bounds");
             assert!(duration >= 7 && duration <= 15, "Duration out of bounds");
-        
-        
+
             let caller = get_caller_address();
             let created_at = get_block_timestamp();
+
+            // Check if borrower has sufficient collateral * 1.3
+            let borrower_collateral_balance = self.token_deposits.entry((caller, accepted_collateral_token)).read();
+            assert(borrower_collateral_balance >= (required_collateral_value * COLLATERAL_RATIO), 'insufficient collateral funds');
+
+            // Lock borrowers collateral
+            self.locked_collateral.entry((caller, accepted_collateral_token)).write(required_collateral_value);
 
             let proposal_id = self.proposals_count.read() + 1;
         
@@ -247,6 +259,8 @@ mod PeerProtocol {
                 borrower: caller,
                 proposal_type: ProposalType::BORROWING,
                 token,
+                accepted_collateral_token,
+                required_collateral_value,
                 amount,
                 interest_rate,
                 duration,
@@ -389,7 +403,7 @@ mod PeerProtocol {
                 },
                 ProposalType::LENDING => {
                     assert(caller != proposal.lender, 'lender not allowed');
-                    self.proposals.entry(proposal_id).borrower.write(caller);
+                    self.handle_lender_acceptance(proposal, caller, net_amount, fee_amount);
                 }
             }
 
@@ -443,7 +457,38 @@ mod PeerProtocol {
             updated_proposal.is_accepted = true;
             updated_proposal.accepted_at = get_block_timestamp();
             updated_proposal.repayment_date = updated_proposal.accepted_at + proposal.duration;
-            
+
+            self.proposals.entry(proposal.id).write(updated_proposal);
+        }
+
+        fn handle_lender_acceptance(ref self: ContractState, proposal: Proposal, borrower: ContractAddress, net_amount: u256, fee_amount: u256) {
+            // Check if acceptor (borrower) has sufficient collateral with 1.3x ratio
+            let required_collateral = proposal.required_collateral_value * COLLATERAL_RATIO;
+            let borrower_collateral_balance = self.token_deposits.entry((borrower, proposal.accepted_collateral_token)).read();
+            assert(borrower_collateral_balance >= required_collateral, 'Insufficient collateral');
+
+            // Lock borrowers collateral
+            self.locked_collateral.entry((borrower, proposal.accepted_collateral_token)).write(required_collateral);
+
+            // Transfer main amount from lender to borrower
+            IERC20Dispatcher { contract_address: proposal.token }.transfer(borrower, net_amount);
+            // Transfer protocol fee to protocol fee address
+            IERC20Dispatcher { contract_address: proposal.token }.transfer(self.protocol_fee_address.read(), fee_amount);
+
+            // Mint SPOK
+            self.mint_spoks(proposal.lender, borrower);
+
+            // Record Transaction
+            self.record_transaction(proposal.token, TransactionType::BORROW, proposal.amount, borrower);
+
+            // Update Proposal
+            let mut updated_proposal = proposal;
+
+            updated_proposal.borrower = borrower;
+            updated_proposal.is_accepted = true;
+            updated_proposal.accepted_at = get_block_timestamp();
+            updated_proposal.repayment_date = updated_proposal.accepted_at + proposal.duration;
+
             self.proposals.entry(proposal.id).write(updated_proposal);
         }
 
