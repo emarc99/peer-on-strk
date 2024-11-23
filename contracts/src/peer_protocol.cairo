@@ -374,6 +374,10 @@ mod PeerProtocol {
                     };
             user_deposits.span()
         }
+
+        fn accept_proposal(ref self: ContractState, proposal_id: u256) {
+            
+        }
     }
 
     #[generate_trait]
