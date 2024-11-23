@@ -180,30 +180,9 @@ mod PeerProtocol {
 
             let prev_deposit = self.token_deposits.entry((caller, token_address)).read();
             self.token_deposits.entry((caller, token_address)).write(prev_deposit + amount);
-
-            // Record transaction
-            let timestamp = get_block_timestamp();
-            let tx_info = get_tx_info();
-            let transaction = Transaction {
-                transaction_type: TransactionType::DEPOSIT,
-                token: token_address,
-                amount,
-                timestamp,
-                tx_hash: tx_info.transaction_hash,
-            };
-            self._add_transaction(caller, transaction);
-
-            self
-                .emit(
-                    TransactionRecorded {
-                        user: caller,
-                        transaction_type: TransactionType::DEPOSIT,
-                        token: token_address,
-                        amount,
-                        timestamp,
-                        tx_hash: tx_info.transaction_hash,
-                    }
-                );
+            
+            // Record Transaction
+            self.record_transaction(token_address, TransactionType::DEPOSIT, amount, caller);
 
             self.emit(DepositSuccessful { user: caller, token: token_address, amount: amount });
         }
@@ -236,28 +215,8 @@ mod PeerProtocol {
             let transfer = token.transfer(caller, amount);
             assert!(transfer, "transfer failed");
 
-            // Record transaction
-            let timestamp = get_block_timestamp();
-            let tx_info = get_tx_info();
-            let transaction = Transaction {
-                transaction_type: TransactionType::WITHDRAWAL,
-                token: token_address,
-                amount,
-                timestamp,
-                tx_hash: tx_info.transaction_hash,
-            };
-            self._add_transaction(caller, transaction);
-            self
-                .emit(
-                    TransactionRecorded {
-                        user: caller,
-                        transaction_type: TransactionType::WITHDRAWAL,
-                        token: token_address,
-                        amount,
-                        timestamp,
-                        tx_hash: tx_info.transaction_hash,
-                    }
-                );
+            // Record Transaction
+            self.record_transaction(token_address, TransactionType::WITHDRAWAL, amount, caller);
 
             self.emit(WithdrawalSuccessful { user: caller, token: token_address, amount: amount, });
         }
@@ -468,8 +427,14 @@ mod PeerProtocol {
             // Transfer net amount to borrower
             IERC20Dispatcher { contract_address: proposal.token }.transfer(proposal.borrower, net_amount);
 
-            // Transfer protocol fee
+            // Transfer protocol fee to protocol fee address
             IERC20Dispatcher { contract_address: proposal.token }.transfer(self.protocol_fee_address.read(), fee_amount);
+
+            // Mint SPOK
+            self.mint_spoks(proposal.borrower, lender);
+
+            // Record Transaction
+            self.record_transaction(proposal.token, TransactionType::LEND, proposal.amount, lender);
 
             // Update Proposal
             let mut updated_proposal = proposal;
@@ -478,6 +443,7 @@ mod PeerProtocol {
             updated_proposal.is_accepted = true;
             updated_proposal.accepted_at = get_block_timestamp();
             updated_proposal.repayment_date = updated_proposal.accepted_at + proposal.duration;
+            
             self.proposals.entry(proposal.id).write(updated_proposal);
         }
 
@@ -506,6 +472,18 @@ mod PeerProtocol {
                 tx_hash: tx_info.transaction_hash,
             };
             self._add_transaction(caller, transaction);
+
+            self
+                .emit(
+                    TransactionRecorded {
+                        user: caller,
+                        transaction_type: TransactionType::WITHDRAWAL,
+                        token: token_address,
+                        amount,
+                        timestamp,
+                        tx_hash: tx_info.transaction_hash,
+                    }
+                );
         }
     }
 }
