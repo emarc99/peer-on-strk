@@ -37,7 +37,7 @@
     "react-hot-toast": "^2.4.1",
     "react-toastify": "^10.0.5",
     "recharts": "^2.12.7",
-    "starknet": "^6.11.0",
+    "starknet": "^5.29.0",
     "starknetkit": "^1.1.9"
   },
   "devDependencies": {
