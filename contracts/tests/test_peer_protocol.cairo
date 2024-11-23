@@ -351,12 +351,19 @@ fn test_create_borrow_proposal() {
     peer_protocol.deposit(collateral_token_address, mint_amount);
     stop_cheat_caller_address(peer_protocol_address);
 
-
     // Borrower creates a borrow proposal
     start_cheat_caller_address(peer_protocol_address, borrower);
     let mut spy = spy_events();
 
-    peer_protocol.create_borrow_proposal(token_address, collateral_token_address, borrow_amount, required_collateral_value, interest_rate, duration);
+    peer_protocol
+        .create_borrow_proposal(
+            token_address,
+            collateral_token_address,
+            borrow_amount,
+            required_collateral_value,
+            interest_rate,
+            duration
+        );
 
     // Check emitted event
     let created_at = starknet::get_block_timestamp();
@@ -424,7 +431,14 @@ fn test_create_borrow_proposal_should_panic_for_unsupported_token() {
     start_cheat_caller_address(peer_protocol_address, borrower);
 
     peer_protocol
-        .create_borrow_proposal(unsupported_token_address, collateral_token_address, borrow_amount, required_collateral_value, interest_rate, duration);
+        .create_borrow_proposal(
+            unsupported_token_address,
+            collateral_token_address,
+            borrow_amount,
+            required_collateral_value,
+            interest_rate,
+            duration
+        );
 
     stop_cheat_caller_address(peer_protocol_address);
 }
