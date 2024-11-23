@@ -403,19 +403,13 @@ use super::{Transaction, TransactionType, UserDeposit, UserAssets, Proposal, Pro
             let caller = get_caller_address();
             let proposal = self.proposals.entry(proposal_id).read();
 
-            if proposal.proposal_type == ProposalType::BORROW {
-                assert(caller != proposal.borrower, 'borrower not allowed');
-            }
-
-            if proposal.proposal_type == ProposalType::LENDING {
-                assert(caller != proposal.lender, 'lender not allowed');
-            }
-
             match proposal.proposal_type {
                 ProposalType::BORROW => {
+                    assert(caller != proposal.borrower, 'borrower not allowed');
                     self.proposals.entry(proposal_id).lender.write(caller);
                 },
                 ProposalType::LENDING => {
+                    assert(caller != proposal.lender, 'lender not allowed');
                     self.proposals.entry(proposal_id).borrower.write(caller);
                 }
             }
