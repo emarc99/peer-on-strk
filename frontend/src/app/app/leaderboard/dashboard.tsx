@@ -33,7 +33,7 @@ const Dashboard: React.FC = () => {
       name: "Duchekelvin",
       rank: "",
       points: "2,564,466 xps",
-      badge: "/images/gold.svg",
+      badge: "/images/goldicon.svg",
     },
     {
       avatar: "/images/badge.svg",
