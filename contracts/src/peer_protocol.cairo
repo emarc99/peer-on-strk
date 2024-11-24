@@ -100,7 +100,8 @@ mod PeerProtocol {
     }
 
     const MAX_U64: u64 = 18446744073709551615_u64;
-    const COLLATERAL_RATIO: u256 = 13_u256 / 10_u256;  // 1.3
+    const COLLATERAL_RATIO_NUMERATOR: u256 = 13_u256;
+    const COLLATERAL_RATIO_DENOMINATOR: u256 = 10_u256;
     const PROTOCOL_FEE_PERCENTAGE: u256 = 1_u256;  // 1%
 
     #[event]
@@ -248,7 +249,7 @@ mod PeerProtocol {
 
             // Check if borrower has sufficient collateral * 1.3
             let borrower_collateral_balance = self.token_deposits.entry((caller, accepted_collateral_token)).read();
-            assert(borrower_collateral_balance >= (required_collateral_value * COLLATERAL_RATIO), 'insufficient collateral funds');
+            assert(borrower_collateral_balance >= (required_collateral_value * COLLATERAL_RATIO_NUMERATOR) / COLLATERAL_RATIO_DENOMINATOR, 'insufficient collateral funds');
 
             // Lock borrowers collateral
             self.locked_collateral.entry((caller, accepted_collateral_token)).write(required_collateral_value);
@@ -466,7 +467,7 @@ mod PeerProtocol {
 
         fn handle_lender_acceptance(ref self: ContractState, proposal: Proposal, borrower: ContractAddress, net_amount: u256, fee_amount: u256) {
             // Check if acceptor (borrower) has sufficient collateral with 1.3x ratio
-            let required_collateral = proposal.required_collateral_value * COLLATERAL_RATIO;
+            let required_collateral = (proposal.required_collateral_value * COLLATERAL_RATIO_NUMERATOR) / COLLATERAL_RATIO_DENOMINATOR;
             let borrower_collateral_balance = self.token_deposits.entry((borrower, proposal.accepted_collateral_token)).read();
             assert(borrower_collateral_balance >= required_collateral, 'Insufficient collateral');
 

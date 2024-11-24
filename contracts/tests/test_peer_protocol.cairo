@@ -14,6 +14,8 @@ use peer_protocol::interfaces::ierc20::{IERC20Dispatcher, IERC20DispatcherTrait}
 use peer_protocol::peer_protocol::ProposalType;
 
 const ONE_E18: u256 = 1000000000000000000_u256;
+const COLLATERAL_RATIO_NUMERATOR: u256 = 13_u256;
+const COLLATERAL_RATIO_DENOMINATOR: u256 = 10_u256;
 
 fn deploy_token(name: ByteArray) -> ContractAddress {
     let contract = declare("MockToken").unwrap().contract_class();
@@ -326,6 +328,7 @@ fn test_create_borrow_proposal() {
     let interest_rate: u64 = 5;
     let duration: u64 = 10;
     let required_collateral_value = 300 * ONE_E18;
+    let collateral_value_with_ratio = (required_collateral_value * COLLATERAL_RATIO_NUMERATOR) / COLLATERAL_RATIO_DENOMINATOR;
 
     // Add supported token
     start_cheat_caller_address(peer_protocol_address, owner);
@@ -348,7 +351,7 @@ fn test_create_borrow_proposal() {
 
     // Borrower Deposit collateral
     start_cheat_caller_address(peer_protocol_address, borrower);
-    peer_protocol.deposit(collateral_token_address, mint_amount);
+    peer_protocol.deposit(collateral_token_address, collateral_value_with_ratio);
     stop_cheat_caller_address(peer_protocol_address);
 
     // Borrower creates a borrow proposal
