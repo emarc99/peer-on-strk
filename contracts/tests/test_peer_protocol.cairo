@@ -328,7 +328,8 @@ fn test_create_borrow_proposal() {
     let interest_rate: u64 = 5;
     let duration: u64 = 10;
     let required_collateral_value = 300 * ONE_E18;
-    let collateral_value_with_ratio = (required_collateral_value * COLLATERAL_RATIO_NUMERATOR) / COLLATERAL_RATIO_DENOMINATOR;
+    let collateral_value_with_ratio = (required_collateral_value * COLLATERAL_RATIO_NUMERATOR)
+        / COLLATERAL_RATIO_DENOMINATOR;
 
     // Add supported token
     start_cheat_caller_address(peer_protocol_address, owner);
