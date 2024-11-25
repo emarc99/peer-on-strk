@@ -7,7 +7,7 @@ import NavMain from './components/NavMain'
 import { ReactNode, useContext } from "react";
 import { usePathname } from 'next/navigation'
 
-export default function QuestRootLayout({
+export default function socialsRootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   const { isDarkMode } = useContext(DarkModeContext);
