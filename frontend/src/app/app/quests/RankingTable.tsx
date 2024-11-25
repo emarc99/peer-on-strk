@@ -76,7 +76,6 @@ const RankingTable = () => {
 
                         <Image
                             src="/images/LogoBlack.svg"
-
                             alt="User Logo"
                             height={45}
                             width={45}
