@@ -19,7 +19,7 @@ const RankingTable = () => {
         if (index === 0) {
             return (
                 <img
-                    src="/images/gold.png"
+                    src="/icons/questGold.svg"
                     alt="1st place"
                 />
             );
@@ -27,7 +27,7 @@ const RankingTable = () => {
         if (index === 1) {
             return (
                 <img
-                    src="/images/silver.png"
+                    src="/icons/questSilver.svg"
                     alt="2nd place"
                 />
             );
@@ -35,7 +35,7 @@ const RankingTable = () => {
         if (index === 2) {
             return (
                 <img
-                    src="/images/bronze.png"
+                    src="/icons/questBronze.svg"
                     alt="3rd place"
                 />
             );
