@@ -6,6 +6,9 @@ import { useContext, useState } from "react";
 import { DarkModeContext } from "./components/DarkMode";
 import Task from './components/Tasks'
 import TaskMobile from './components/TasksMobile'
+import NavMain from './components/NavMain'
+import Sidebar from './components/sidebar'
+
 interface Quest {
     id: number;
     title: string;
@@ -14,18 +17,24 @@ interface Quest {
     status: 'available' | 'in_progress' | 'completed';
 }
 
-export default function socials() {
+export default function Socials() {
     const { isDarkMode } = useContext(DarkModeContext);
 
 
-    const [isOpen, setIsOpen] = useState<Boolean>(false);
+    const [isOpen, setIsOpen] = useState<Boolean>(false)
 
     const toggleOpen = () => {
         setIsOpen(!isOpen);
     };
+  return (
+    <main className="bg-[#F5F5F5]">
+      <div className="flex h-screen">
+        <Sidebar />
+        <div className='flex-1 flex flex-col h-full max-h-screen overflow-auto '>
+          {<NavMain />}
 
-    return (
-        <section className="md:p-4 flex flex-col gap-6">
+          <main className='flex-1 px-3 md:px-6 '>
+          <section className="md:p-4 flex flex-col gap-6">
             <div className='flex flex-col gap-2'>
                 <h1 className={`font-[600] xl:text-[3.1rem] lg:text-[2.9rem] md:text-[2.8rem] sm:text-[2rem] xs:text-[1.5rem]  ${isDarkMode ? "  text-white" : "   text-black"}`}>Tasks</h1>
 
@@ -47,5 +56,9 @@ export default function socials() {
                 </div>
             
         </section>
-    )
+          </main>
+        </div>
+      </div>
+    </main>
+  );
 }
