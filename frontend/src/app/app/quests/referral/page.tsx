@@ -1,8 +1,9 @@
 "use client";
 import React from "react";
-import RankingTable from "@/app/app/quests/RankingTable";
+import RankingTable from "@/app/app/quests/socials/components/RankingTable";
 import Nav from "../../Nav"
 import Sidebar from "../../sidebar"
+// import Sidebar from "../socials/components/sidebar"
 
 
 const ReferralBoards = () => {

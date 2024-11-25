@@ -82,7 +82,7 @@ const RankingTable = () => {
                             className="border border-[#000000] border-opacity-10 rounded-lg p-2 bg-[#F5F5F5]"
                         />
                         <div className="flex flex-col">
-                            <span className=" text-[25px] font-semibold">Duchekelvin</span>
+                            <span className=" lg:text-[25px] text-[18px] font-semibold">Duchekelvin</span>
                             <span>#20,035</span>
                         </div>
                     </div>
